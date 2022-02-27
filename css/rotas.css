@@ -1,0 +1,157 @@
+* {
+	box-sizing: border-box;
+}
+/* RETIRADO DE SACSB - Niel: index.css*/
+
+html,
+body,
+#map {
+	height: 100%;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+}
+#map {
+    z-index: 0;
+}
+.italic {
+	font-style: italic;
+}
+
+.small {
+	font-size: x-small;
+}
+
+/*
+* --------------
+* ELEVATION CONTROL
+* --------------
+*/
+/*
+* --------------
+* FITA COM INFO
+* --------------
+*/
+.leaflet-control-container .elevation-summary {
+	text-shadow: none !important;
+	background-color: rgba(191, 122, 25, 0.9);
+	margin: 0 !important;
+	color: black; /*whitesmoke;*/
+	font-size: .8em;
+	padding: 5px;
+	text-align: center;
+}
+
+.line-summary>span:not(:last-child):after {
+	content: "\0020\|\0020" !important;
+}
+
+.line-summary .minslope,
+.line-summary .maxslope {
+	display: none;
+}
+
+.line-summary>span.descent:after {
+	content: none !important;
+}
+
+
+/*
+* --------------
+* BORDO DO CONTROL-ELEVATION
+* --------------
+*/
+.elevation-control {
+	border: 1px solid rgba(173, 53, 37, 0.8) !important;
+	border-radius: 3px;
+}
+/*
+* --------------
+* CAIXA COM TOOLTIP DO PERFIL
+* --------------
+*/
+.elevation-control.elevation .mouse-focus-line {
+	stroke: #0D1821;
+	stroke-width: 1;
+	pointer-events: none;
+}
+
+.elevation-control.elevation .mouse-focus-label-rect {
+	fill: rgba(240, 240, 240, 0.95);
+	fill-opacity: 0.75;
+	pointer-events: none;
+	stroke-width: 1;
+	stroke: #444;
+}
+
+.elevation-control.elevation .mouse-focus-label-text {
+	fill: #444;
+	pointer-events: none;
+	font-size: x-small;
+}
+/*
+* --------------
+* GRELHA DO PERFIL
+* --------------
+*/
+.elevation-control.elevation .grid .tick line {
+	stroke: whitesmoke;
+	stroke-width: 0.5px;
+	shape-rendering: crispEdges;
+}
+
+/*
+* ---------------------------------------
+* EC THEME
+* ---------------------------------------
+*/
+/* FUNDO */
+.ec-theme.elevation-control.elevation .background {
+	background-color: rgba(191, 122, 25, 0.4);
+}
+/* EIXOS */
+.ec-theme.elevation-control.elevation .axis line,
+.ec-theme.elevation-control.elevation .axis path {
+	stroke: #0D1821;
+}
+/* ???? */
+.ec-theme.elevation-control.elevation .mouse-drag {
+	fill: rgba(191, 122, 25, 0.4);
+}
+/* ÍCONE DE PERFIL PARA USAR NO CASO DE SE PRETENDER UM BOTÃO PARA ATIVAR */
+.ec-theme.elevation-control.elevation .elevation-toggle-icon {
+	background: url(../libs/leaflet-elevation/images/elevation-gray.svg) no-repeat center center;
+}
+/* PREENCHIMENTO DO PERFIL */
+
+.ec-theme.elevation-control.elevation .area {
+	fill: rgba(191, 122, 25, 0.7);
+	stroke-width: 1;
+	stroke: rgb(191, 122, 25);
+}
+
+.ec-theme.elevation-control.elevation .mouse-focus-line {
+	stroke: #0D1821;
+}
+
+.ec-theme.height-focus {
+	stroke: #000;
+	fill: whitesmoke;
+}
+
+.ec-theme.elevation-polyline {
+	stroke: rgba(191, 122, 25, 1);
+}
+/* EC: labels na vertical */
+
+.ec-theme.elevation-control.elevation .point text {
+  fill: #000;
+  writing-mode: vertical-lr;
+  transform: rotate(-180deg);
+  font-weight: 500; /*normal;*/
+  font-size: 11px;
+    /*paint-order: stroke fill;
+  stroke: #fff;
+  stroke-width: 2px*/
+}
+
