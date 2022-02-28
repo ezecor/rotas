@@ -21,6 +21,7 @@ body,
 .small {
 	font-size: x-small;
 }
+/*impede a ttoltip no telemóvel */
 @media (hover: none) {
   .leaflet-tooltip-pane { display: none; }
 }
@@ -36,10 +37,11 @@ body,
 */
 .leaflet-control-container .elevation-summary {
 	text-shadow: none !important;
-	background-color: rgba(191, 122, 25, 0.9);
+	background-color: rgba(179, 179, 255, 0.9);
+    /*background-color: rgba(191, 122, 25, 0.9);*/
 	margin: 0 !important;
-	color: black; /*whitesmoke;*/
-	font-size: .8em;
+	color: black; /*white;*/
+    font-size: .8em;
 	padding: 5px;
 	text-align: center;
 }
@@ -64,7 +66,8 @@ body,
 * --------------
 */
 .elevation-control {
-	border: 1px solid rgba(173, 53, 37, 0.8) !important;
+	/*border: 1px solid rgba(173, 53, 37, 0.8) !important;*/
+    border: 1px solid rgba(153, 51, 255, 0.8) !important;
 	border-radius: 3px;
 }
 /*
@@ -109,7 +112,7 @@ body,
 */
 /* FUNDO */
 .ec-theme.elevation-control.elevation .background {
-	background-color: rgba(191, 122, 25, 0.4);
+	background-color: rgba(179, 179, 255, 0.4);
 }
 /* EIXOS */
 .ec-theme.elevation-control.elevation .axis line,
@@ -118,17 +121,18 @@ body,
 }
 /* ???? */
 .ec-theme.elevation-control.elevation .mouse-drag {
-	fill: rgba(191, 122, 25, 0.4);
+	fill: rgba(179, 179, 255, 0.4);
 }
 /* ÍCONE DE PERFIL PARA USAR NO CASO DE SE PRETENDER UM BOTÃO PARA ATIVAR */
 .ec-theme.elevation-control.elevation .elevation-toggle-icon {
-	background: url(../libs/leaflet-elevation/images/elevation-gray.svg) no-repeat center center;
+	background: url(../libs/leaflet-elevation/images/elevation-purple.svg) no-repeat center center;
 }
 /* PREENCHIMENTO DO PERFIL */
 
 .ec-theme.elevation-control.elevation .area {
-	fill: rgba(191, 122, 25, 0.7);
-	stroke-width: 1;
+	/*fill: rgba(204, 51, 0, 0.8);*/
+    fill: rgba(153, 0, 153, 0.8);
+    stroke-width: 1;
 	stroke: rgb(191, 122, 25);
 }
 
@@ -140,18 +144,21 @@ body,
 	stroke: #000;
 	fill: whitesmoke;
 }
-
+/* TRILHO */
 .ec-theme.elevation-polyline {
-	stroke: rgba(191, 122, 25, 1);
+	stroke: rgba(166, 77, 255, 1);
+    /*stroke: rgb(204, 51, 0);*/
 }
-/* EC: labels na vertical */
+/* EC: labels na vertical: com a opção display: none, não mostra pontos nem labels */
 
+.ec-theme.elevation-control.elevation .point,
 .ec-theme.elevation-control.elevation .point text {
+  display: none; /* não mostra */
   fill: #000;
   writing-mode: vertical-lr;
   transform: rotate(-180deg);
   font-weight: 500; /*normal;*/
-  font-size: 11px;
+  font-size: .8em;
     /*paint-order: stroke fill;
   stroke: #fff;
   stroke-width: 2px*/

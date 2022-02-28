@@ -65,16 +65,7 @@
   stroke: #fff;
   stroke-width: 2px
 }
-/*
-.elevation-control.elevation .axis text,
-.elevation-control.elevation .point text {
-  fill: #000;
-  font-weight: 700;
-  paint-order: stroke fill;
-  stroke: #fff;
-  stroke-width: 2px
-}
-*/
+
 .elevation-control.elevation .y.axis text {
   text-anchor: end;
 }

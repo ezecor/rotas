@@ -73,11 +73,11 @@ map.attributionControl.setPrefix(
 * ----------------------------
 */
 var elevation_options = {
-    theme: "ec-theme", //"ec-theme", //"scasb-theme", //"lime-theme",
+    theme: "ec-theme", //"scasb-theme", //"lime-theme",
     detached: false,
     elevationDiv: "#elevation-div",
     autohide: false,
-    collapsed: false,
+    collapsed: true, //o perfil abre fechado, aparecendo uma imagem; quando abre tem um botão para fechar 
     position: "bottomleft", //"topright",
     followMarker: true,
     autofitBounds: true,
@@ -92,9 +92,10 @@ var elevation_options = {
     summary: 'line', 
     downloadLink: false,
     ruler: true,
-    legend: true,
+    legend: false, //mostra/esconde a legenda
     almostOver: true,
     distanceMarkers: true,
+    yAxisMin: 700, //forçar o Y
     waypoints: true,
     wptIcons: {
       '': L.divIcon({
@@ -105,9 +106,16 @@ var elevation_options = {
       })
     },
     wptLabels: true,
-    preferCanvas: true
-  };
-
+    preferCanvas: true,
+    // é necessário leaflet-gpx.js ?
+    gpxOptions: {
+        marker_options: {
+            startIconUrl: 'pin-icon-start.png',
+            endIconUrl: 'pin-icon-end.png',
+            shadowUrl: 'pin-shadow.png'
+        }
+    }
+};
 /*
 * --------------------
 * Personaliza a info 

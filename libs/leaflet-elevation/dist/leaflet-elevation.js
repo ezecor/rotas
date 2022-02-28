@@ -571,7 +571,7 @@
         line: '#566B13'
       },
       'ec': {
-        area: 'rgba(191, 122, 25, 0.7)',
+        area: 'rgba(204, 51, 0, 0.7)',
         line: 'rgba(191, 122, 25, 1)'
       }        
         
@@ -2008,9 +2008,9 @@
       gpxOptions: {
         async: true,
         marker_options: {
-          startIconUrl: null,
-          endIconUrl: null,
-          shadowUrl: null,
+          startIconUrl: '../images/pin-icon-start.png', //null,
+          endIconUrl: '../images/pin-icon-end.png', //null,
+          shadowUrl: '../images/pin-shadow.png', //null,
           wptIcons: {
             '': L.divIcon({
               className: 'elevation-waypoint-marker',
