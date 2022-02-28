@@ -21,7 +21,9 @@ body,
 .small {
 	font-size: x-small;
 }
-
+@media (hover: none) {
+  .leaflet-tooltip-pane { display: none; }
+}
 /*
 * --------------
 * ELEVATION CONTROL
