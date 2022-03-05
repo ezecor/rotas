@@ -3,8 +3,8 @@
 <wpt lat="40.8652648" lon="-8.277496">
   <ele>919.1</ele>
   <name>Praia Fluvial</name>
-  <desc>&lt;img style="max-width:300px;" src="img/wp1.png">Albergaria da Serra</desc>
-  <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
+  <desc>&lt;img id="myImg" style="max-width:300px;" src="img/wp1.png">Albergaria da Serra</desc>
+  <sym></sym>
 </wpt>
 <wpt lat="40.8675385" lon="-8.2736244">
   <ele>926.5</ele>
@@ -21,7 +21,7 @@
 <wpt lat="40.8674219" lon="-8.2727487">
   <ele>931.6</ele>
   <name>Alminhas</name>
-  <desc>&lt;img style="max-width:300px;" src="img/wp4.png">Albergaria da Serra. - Cemitério &lt;a href="https://docs.google.com/document/d/e/2PACX-1vRG8lm9I0I2c-Ss-uqzqZnRy1HGvcBMpMMkV5Z9ONFBwKa5usYUf1M4dQnORoOjG1JKH-q3GqR8XSij/pub" target="_blank">Ver mais&lt;/a></desc>
+  <desc>&lt;img style="max-width:300px;" src="img/wp4.png">Albergaria da Serra. Cemitério &lt;a href="https://docs.google.com/document/d/e/2PACX-1vRG8lm9I0I2c-Ss-uqzqZnRy1HGvcBMpMMkV5Z9ONFBwKa5usYUf1M4dQnORoOjG1JKH-q3GqR8XSij/pub" target="_blank">Ver mais&lt;/a></desc>
   <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
 </wpt>
 <wpt lat="40.8688438" lon="-8.2757026">
@@ -33,13 +33,13 @@
 <wpt lat="40.8691874" lon="-8.2762971">
   <ele>950.0</ele>
   <name>Alminhas</name>
-  <desc>&lt;img style="max-width:300px;" src="img/wp6.png">Albergaria da Serra &lt;a href="https://docs.google.com/document/d/1fuDwM2DjopdHR2axWlNfVbOK_0YD8Mgg3H13wx64YL4/edit?usp=sharing" target="_blank">Ver mais&lt;/a></desc>
+  <desc>&lt;img style="max-width:300px;" src="img/wp6.png">Albergaria da Serra &lt;a href="https://docs.google.com/document/d/e/2PACX-1vTu5p3Q47eJoMhp3xple46e_Xhk1zAiC15NjZc4ynYA5N-VaPFu6Ha3whcV0s8YxAfOcH-ClbgglBhV/pub" target="_blank">Ver mais&lt;/a></desc>
   <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
 </wpt>
 <wpt lat="40.8688682" lon="-8.2772557">
   <ele>945.6</ele>
   <name>Alminhas</name>
-  <desc>&lt;img style="max-width:300px;" src="img/wp7.png">Albergaria da Serra &lt;a href="https://docs.google.com/document/d/1fuDwM2DjopdHR2axWlNfVbOK_0YD8Mgg3H13wx64YL4/edit?usp=sharing" target="_blank">Ver mais&lt;/a></desc>
+  <desc>&lt;img style="max-width:300px;" src="img/wp7.png">Albergaria da Serra &lt;a href="https://docs.google.com/document/d/e/2PACX-1vRtOQ9lK0Sgz3LuYJsXYdICtYUklBEgcIsmoL2vdjJlZ5CE67U21Kfxsd9TqQlOSwOaYHhm342hrMdY/pub" target="_blank">Ver mais&lt;/a></desc>
   <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
 </wpt>
 <wpt lat="40.8696175" lon="-8.276173">
@@ -57,7 +57,7 @@
 <wpt lat="40.8744887" lon="-8.2988943">
   <ele>862.3</ele>
   <name>Alminhas</name>
-  <desc>&lt;img style="max-width:300px;" src="img/wp10.png">Merujal &lt;a href="https://docs.google.com/document/d/1NNUWAEafEIeujZMRFPKzDL32-RqNHJcFmYTdnXGEO3g/edit?usp=sharing" target="_blank">Ver mais&lt;/a></desc>
+  <desc>&lt;img style="max-width:300px;" src="img/wp10.png">Merujal &lt;a href="https://docs.google.com/document/d/e/2PACX-1vS2gkbXcugBMyPaEAHvMxiE3MQxWhxYsTX-s2ZDbyjtabiRCSFNuRTGEm0_wKxJF2aPHZm4VLYhqnFZ/pub" target="_blank">Ver mais&lt;/a></desc>
   <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
 </wpt>
 <wpt lat="40.8782318" lon="-8.3026998">
@@ -70,7 +70,19 @@
   <ele>870.9</ele>
   <name>Placa</name>
   <desc>&lt;img style="max-width:300px;" src="img/wp12.png">Capela da Senhora da Lage - traseira</desc>
-  <sym>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</sym>
+  <sym></sym>
+</wpt>
+<wpt lat="40.864759369" lon="-8.277458624">
+  <ele>921.373</ele>
+  <name></name>
+  <desc></desc>
+  <sym>end</sym>
+</wpt>
+<wpt lat="40.864759369" lon="-8.277358624">
+  <ele>921.373</ele>
+  <name></name>
+  <desc></desc>
+  <sym>start</sym>
 </wpt>
 <trk>
   <name>Albergaria / Merujal / Albergaria</name>

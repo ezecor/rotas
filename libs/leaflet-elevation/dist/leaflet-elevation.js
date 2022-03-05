@@ -45,87 +45,6 @@
       };
     }, window);
 
-    function _typeof(obj) {
-      "@babel/helpers - typeof";
-
-      if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-        _typeof = function (obj) {
-          return typeof obj;
-        };
-      } else {
-        _typeof = function (obj) {
-          return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-        };
-      }
-
-      return _typeof(obj);
-    }
-
-    function _defineProperty(obj, key, value) {
-      if (key in obj) {
-        Object.defineProperty(obj, key, {
-          value: value,
-          enumerable: true,
-          configurable: true,
-          writable: true
-        });
-      } else {
-        obj[key] = value;
-      }
-
-      return obj;
-    }
-
-    /**
-     * Recursive deep merge objects.
-     * Alternative to L.Util.setOptions(this, options).
-     */
-    function deepMerge(target) {
-      for (var _len = arguments.length, sources = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        sources[_key - 1] = arguments[_key];
-      }
-
-      if (!sources.length) return target;
-      var source = sources.shift();
-
-      if (isObject(target) && isObject(source)) {
-        for (var key in source) {
-          if (isObject(source[key])) {
-            if (!target[key]) Object.assign(target, _defineProperty({}, key, {}));
-            deepMerge(target[key], source[key]);
-          } else {
-            Object.assign(target, _defineProperty({}, key, source[key]));
-          }
-        }
-      }
-
-      return deepMerge.apply(void 0, [target].concat(sources));
-    }
-    /**
-     * Wait for document load before execute function.
-     */
-
-    function deferFunc(f) {
-      if (document.readyState !== 'complete') window.addEventListener("load", f, {
-        once: true
-      });else f();
-    }
-    /**
-     * Debounce function to limit events are being fired.
-     */
-
-    function debounce(func, wait, context, immediate) {
-      var timeout;
-      return function () {
-        var args = arguments;
-        clearTimeout(timeout);
-        timeout = setTimeout(function () {
-          timeout = null;
-          if (!immediate) func.apply(context, args);
-        }, wait);
-        if (immediate && !timeout) func.apply(context, args);
-      };
-    }
     var SEC = 1000;
     var MIN = SEC * 60;
     var HOUR = MIN * 60;
@@ -158,193 +77,20 @@
       return (d ? d + "d " : '') + h.toString().padStart(2, 0) + ':' + m.toString().padStart(2, 0) + "'" + s.toString().padStart(2, 0) + '"';
     }
     /**
-     * Simple GeoJSON data loader.
+     * Generate download data event.
      */
 
-    function GeoJSONLoader(data, control) {
-      if (typeof data === "string") {
-        data = JSON.parse(data);
-      }
-
-      control = control || this;
-      var distanceMarkers = control.options.distanceMarkers === true ? {
-        lazy: true
-      } : L.extend({
-        lazy: true
-      }, control.options.distanceMarkers);
-      var layer = L.geoJson(data, {
-        distanceMarkers: distanceMarkers,
-        style: function style(feature) {
-          var style = L.extend({}, control.options.polyline);
-
-          if (control.options.theme) {
-            style.className += ' ' + control.options.theme;
-          }
-
-          return style;
-        },
-        pointToLayer: function pointToLayer(feature, latlng) {
-          var marker = L.marker(latlng, {
-            icon: control.options.gpxOptions.marker_options.wptIcons['']
-          });
-          var prop = feature.properties;
-          var desc = prop.desc ? prop.desc : '';
-          var name = prop.name ? prop.name : '';
-
-          if (name || desc) {
-            marker.bindPopup("<b>" + name + "</b>" + (desc.length > 0 ? '<br>' + desc : '')).openPopup();
-          }
-
-          control._registerCheckPoint({
-            latlng: latlng,
-            label: name
-          }, true);
-
-          control.fire('waypoint_added', {
-            point: marker,
-            point_type: 'waypoint',
-            element: latlng
-          });
-          return marker;
-        },
-        onEachFeature: function onEachFeature(feature, layer) {
-          if (feature.geometry && feature.geometry.type == 'Point') return; // Standard GeoJSON
-          // control.addData(feature, layer);  // NB uses "_addGeoJSONData"
-          // Extended GeoJSON
-
-          layer._latlngs.forEach(function (point, i, data) {
-            // same properties as L.GPX layer
-            point.meta = {
-              time: null,
-              ele: null,
-              hr: null,
-              cad: null,
-              atemp: null
-            };
-            if ("alt" in point) point.meta.ele = point.alt;
-
-            if (feature.properties) {
-              var prop = feature.properties;
-              if ("coordTimes" in prop) point.meta.time = new Date(Date.parse(prop.coordTimes[i]));else if ("times" in prop) point.meta.time = new Date(Date.parse(prop.times[i]));else if ("time" in prop) point.meta.time = new Date(Date.parse(_typeof(prop.time) === 'object' ? prop.time[i] : prop.time));
-              if ("heartRates" in prop) point.meta.hr = parseInt(prop.heartRates[i]);else if ("heartRate" in prop) point.meta.hr = parseInt(_typeof(prop.heartRate) === 'object' ? prop.heartRate[i] : prop.heartRate); // TODO: cadence, temperature
-            }
-          });
-
-          control.addData(layer); // NB uses "_addGPXData"
-          // Postpone adding the distance markers (lazy: true)
-
-          if (control.options.distanceMarkers && distanceMarkers.lazy) {
-            layer.on('add remove', function (e) {
-              var path = e.target;
-
-              if (L.DistanceMarkers && path instanceof L.Polyline) {
-                path[e.type + 'DistanceMarkers']();
-              }
-            });
-          }
-
-          control.track_info = L.extend({}, control.track_info, {
-            type: "geojson",
-            name: data.name
-          });
-        }
+    function saveFile(dataURI, fileName) {
+      var a = create('a', '', {
+        href: dataURI,
+        target: '_new',
+        download: fileName || "",
+        style: "display:none;"
       });
-
-      L.Control.Elevation._d3LazyLoader.then(function () {
-        control._fireEvt("eledata_loaded", {
-          data: data,
-          layer: layer,
-          name: control.track_info.name,
-          track_info: control.track_info
-        });
-      });
-
-      return layer;
-    }
-    /**
-     * Check DOM element visibility.
-     */
-
-    function isDomVisible(elem) {
-      return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
-    }
-    /**
-     * Check object type.
-     */
-
-    function isObject(item) {
-      return item && _typeof(item) === 'object' && !Array.isArray(item);
-    }
-    /**
-     * Check DOM element viewport visibility.
-     */
-
-    function isVisible(elem) {
-      if (!elem) return false;
-      var styles = window.getComputedStyle(elem);
-
-      function isVisibleByStyles(elem, styles) {
-        return styles.visibility !== 'hidden' && styles.display !== 'none';
-      }
-
-      function isAboveOtherElements(elem, styles) {
-        var boundingRect = elem.getBoundingClientRect();
-        var left = boundingRect.left + 1;
-        var right = boundingRect.right - 1;
-        var top = boundingRect.top + 1;
-        var bottom = boundingRect.bottom - 1;
-        var above = true;
-        var pointerEvents = elem.style.pointerEvents;
-        if (styles['pointer-events'] == 'none') elem.style.pointerEvents = 'auto';
-        if (document.elementFromPoint(left, top) !== elem) above = false;
-        if (document.elementFromPoint(right, top) !== elem) above = false; // Only for completely visible elements
-        // if (document.elementFromPoint(left, bottom) !== elem) above = false;
-        // if (document.elementFromPoint(right, bottom) !== elem) above = false;
-
-        elem.style.pointerEvents = pointerEvents;
-        return above;
-      }
-
-      if (!isVisibleByStyles(elem, styles)) return false;
-      if (!isAboveOtherElements(elem, styles)) return false;
-      return true;
-    }
-    /**
-     * Check JSON object type.
-     */
-
-    function isJSONDoc(doc, lazy) {
-      lazy = typeof lazy === "undefined" ? true : lazy;
-
-      if (typeof doc === "string" && lazy) {
-        doc = doc.trim();
-        return doc.indexOf("{") == 0 || doc.indexOf("[") == 0;
-      } else {
-        try {
-          JSON.parse(doc.toString());
-        } catch (e) {
-          if (_typeof(doc) === "object" && lazy) return true;
-          console.warn(e);
-          return false;
-        }
-
-        return true;
-      }
-    }
-    /**
-     * Check XML object type.
-     */
-
-    function isXMLDoc(doc, lazy) {
-      lazy = typeof lazy === "undefined" ? true : lazy;
-
-      if (typeof doc === "string" && lazy) {
-        doc = doc.trim();
-        return doc.indexOf("<") == 0;
-      } else {
-        var documentElement = (doc ? doc.ownerDocument || doc : 0).documentElement;
-        return documentElement ? documentElement.nodeName !== "HTML" : false;
-      }
+      var b = document.body;
+      b.appendChild(a);
+      a.click();
+      b.removeChild(a);
     }
     /**
      * Async JS script download.
@@ -369,49 +115,34 @@
       });
     }
     /**
-     * Generate download data event.
+     * Convert SVG Path into Path2D and then update canvas
      */
 
-    function saveFile(dataURI, fileName) {
-      var a = create('a', '', {
-        href: dataURI,
-        target: '_new',
-        download: fileName || "",
-        style: "display:none;"
-      });
-      var b = document.body;
-      b.appendChild(a);
-      a.click();
-      b.removeChild(a);
+    function drawCanvas(ctx, path) {
+      path.classed('canvas-path', true);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      var p = new Path2D(path.attr('d'));
+      ctx.strokeStyle = path.attr('stroke');
+      ctx.fillStyle = path.attr('fill');
+      ctx.lineWidth = 1.25;
+      ctx.globalCompositeOperation = 'source-over'; // stroke opacity
+
+      ctx.globalAlpha = path.attr('stroke-opacity') || 0.3;
+      ctx.stroke(p); // fill opacity
+
+      ctx.globalAlpha = path.attr('fill-opacity') || 0.45;
+      ctx.fill(p);
+      ctx.globalAlpha = 1;
+      ctx.closePath();
     }
     /**
-     * Wait for element visible before execute function.
+     * Limit a number between min / max values
      */
 
-    function waitHolder(elem) {
-      return new Promise(function (resolve, reject) {
-        var ticking = false;
-
-        var scrollFn = function scrollFn() {
-          if (!ticking) {
-            L.Util.requestAnimFrame(function () {
-              if (isVisible(elem)) {
-                window.removeEventListener('scroll', scrollFn);
-                resolve();
-              }
-
-              ticking = false;
-            });
-            ticking = true;
-          }
-        };
-
-        window.addEventListener('scroll', scrollFn);
-        if (elem) elem.addEventListener('mouseenter', scrollFn, {
-          once: true
-        });
-        scrollFn();
-      });
+    function clamp(val, range) {
+      if (range) return val < range[0] ? range[0] : val > range[1] ? range[1] : val;
+      return val;
     }
     /**
      * A little bit safier than L.DomUtil.addClass
@@ -502,9 +233,17 @@
      */
 
     var hasClass = L.DomUtil.hasClass;
+    /**
+     * Generate a random string
+     */
+
     function randomId() {
       return Math.random().toString(36).substr(2, 9);
     }
+    /**
+     * Execute a function foreach element in object
+     */
+
     function each(obj, fn) {
       for (var i in obj) {
         fn(obj[i], i);
@@ -513,19 +252,11 @@
 
     var _ = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        deepMerge: deepMerge,
-        deferFunc: deferFunc,
-        debounce: debounce,
         formatTime: formatTime,
-        GeoJSONLoader: GeoJSONLoader,
-        isDomVisible: isDomVisible,
-        isObject: isObject,
-        isVisible: isVisible,
-        isJSONDoc: isJSONDoc,
-        isXMLDoc: isXMLDoc,
-        lazyLoader: lazyLoader,
         saveFile: saveFile,
-        waitHolder: waitHolder,
+        lazyLoader: lazyLoader,
+        drawCanvas: drawCanvas,
+        clamp: clamp,
         addClass: addClass,
         removeClass: removeClass,
         toggleClass: toggleClass,
@@ -570,11 +301,11 @@
         area: '#9CC222',
         line: '#566B13'
       },
-      'ec': {
-        area: 'rgba(204, 51, 0, 0.7)',
+      /*EC-THEME*/
+        'ec': {
+        area: 'rgba(153, 0, 153, 0.4)',
         line: 'rgba(191, 122, 25, 1)'
-      }        
-        
+      }
     };
     var Area = function Area(_ref) {
       var width = _ref.width,
@@ -655,58 +386,60 @@
       props.type = "grid";
       return Axis(props);
     };
-    var HeightFocusLine = function HeightFocusLine(_ref4) {
+    var PositionMarker = function PositionMarker(_ref4) {
       var theme = _ref4.theme,
           _ref4$xCoord = _ref4.xCoord,
           xCoord = _ref4$xCoord === void 0 ? 0 : _ref4$xCoord,
           _ref4$yCoord = _ref4.yCoord,
           yCoord = _ref4$yCoord === void 0 ? 0 : _ref4$yCoord,
+          _ref4$labels = _ref4.labels,
+          labels = _ref4$labels === void 0 ? {} : _ref4$labels,
+          _ref4$item = _ref4.item,
+          item = _ref4$item === void 0 ? {} : _ref4$item,
           _ref4$length = _ref4.length,
           length = _ref4$length === void 0 ? 0 : _ref4$length;
-      return function (line) {
-        return line.attr("class", theme + " height-focus line").attr("x1", xCoord).attr("x2", xCoord).attr("y1", yCoord).attr("y2", length);
-      };
-    };
-    var HeightFocusLabel = function HeightFocusLabel(_ref5) {
-      var theme = _ref5.theme,
-          _ref5$xCoord = _ref5.xCoord,
-          xCoord = _ref5$xCoord === void 0 ? 0 : _ref5$xCoord,
-          _ref5$yCoord = _ref5.yCoord,
-          yCoord = _ref5$yCoord === void 0 ? 0 : _ref5$yCoord,
-          label = _ref5.label;
-      return function (text) {
-        text.attr("class", theme + " height-focus-label").style("pointer-events", "none").attr("x", xCoord + 5).attr("y", yCoord);
-        var y = text.select(".height-focus-y");
-        if (!y.node()) y = text.append("svg:tspan");
-        y.attr("class", "height-focus-y").text(label);
+      return function (g) {
+        g.attr("class", "height-focus-group");
+        var line = g.select('.height-focus.line');
+        var circle = g.select('.height-focus.circle-lower');
+        var text = g.select('.height-focus-label');
+        if (!line.node()) line = g.append('svg:line');
+        if (!circle.node()) circle = g.append('svg:circle');
+        if (!text.node()) text = g.append('svg:text');
+        if (isNaN(xCoord) || isNaN(yCoord)) return g;
+        circle.attr("class", theme + " height-focus circle-lower").attr("transform", "translate(" + xCoord + "," + yCoord + ")").attr("r", 6).attr("cx", 0).attr("cy", 0);
+        line.attr("class", theme + " height-focus line").attr("x1", xCoord).attr("x2", xCoord).attr("y1", yCoord).attr("y2", length);
+        text.attr("class", theme + " height-focus-label").style("pointer-events", "none").attr("x", xCoord + 5).attr("y", length);
+        var label;
+
+        for (var i in labels) {
+          label = text.select(".height-focus-" + labels[i].name);
+
+          if (!label.size()) {
+            label = text.append("svg:tspan").attr("class", "height-focus-" + labels[i].name).attr("dy", "1.5em");
+          }
+
+          label.text(typeof labels[i].value !== "function" ? labels[i].value : labels[i].value(item));
+        }
+
+        text.select('tspan').attr("dy", text.selectAll('tspan').size() > 1 ? "-1.5em" : "0em");
         text.selectAll('tspan').attr("x", xCoord + 5);
-        return text;
+        return g;
       };
     };
-    var HeightFocusMarker = function HeightFocusMarker(_ref6) {
-      var theme = _ref6.theme,
-          _ref6$xCoord = _ref6.xCoord,
-          xCoord = _ref6$xCoord === void 0 ? 0 : _ref6$xCoord,
-          _ref6$yCoord = _ref6.yCoord,
-          yCoord = _ref6$yCoord === void 0 ? 0 : _ref6$yCoord;
-      return function (circle) {
-        return circle.attr("class", theme + " height-focus circle-lower").attr("transform", "translate(" + xCoord + "," + yCoord + ")").attr("r", 6).attr("cx", 0).attr("cy", 0);
-      };
-    };
-    var LegendItem = function LegendItem(_ref7) {
-      var name = _ref7.name,
-          label = _ref7.label,
-          width = _ref7.width,
-          height = _ref7.height,
-          _ref7$margins = _ref7.margins,
-          margins = _ref7$margins === void 0 ? {} : _ref7$margins,
-          color = _ref7.color,
-          path = _ref7.path;
+    var LegendItem = function LegendItem(_ref5) {
+      var name = _ref5.name,
+          label = _ref5.label,
+          width = _ref5.width,
+          height = _ref5.height,
+          _ref5$margins = _ref5.margins,
+          margins = _ref5$margins === void 0 ? {} : _ref5$margins,
+          color = _ref5.color,
+          path = _ref5.path;
       return function (g) {
         g.attr("class", "legend-item legend-" + name.toLowerCase()).attr("data-name", name);
-        var svg = d3.select(g.node().ownerSVGElement || g);
         g.on('click.legend', function () {
-          return svg.dispatch("legend_clicked", {
+          return d3.select(g.node().ownerSVGElement || g).dispatch("legend_clicked", {
             detail: {
               path: path.node(),
               name: name,
@@ -720,34 +453,24 @@
         return g;
       };
     };
-    var MouseFocusLine = function MouseFocusLine(_ref8) {
-      var _ref8$xCoord = _ref8.xCoord,
-          xCoord = _ref8$xCoord === void 0 ? 0 : _ref8$xCoord,
-          height = _ref8.height;
-      return function (line) {
-        return line.attr('class', 'mouse-focus-line').attr('x2', xCoord).attr('y2', 0).attr('x1', xCoord).attr('y1', height);
-      };
-    };
-    var MouseFocusLabel = function MouseFocusLabel(_ref9) {
-      var xCoord = _ref9.xCoord,
-          yCoord = _ref9.yCoord,
-          _ref9$labelX = _ref9.labelX,
-          labelX = _ref9$labelX === void 0 ? "" : _ref9$labelX,
-          _ref9$labelY = _ref9.labelY,
-          labelY = _ref9$labelY === void 0 ? "" : _ref9$labelY,
-          width = _ref9.width;
+    var Tooltip = function Tooltip(_ref6) {
+      var xCoord = _ref6.xCoord,
+          yCoord = _ref6.yCoord,
+          width = _ref6.width,
+          height = _ref6.height,
+          _ref6$labels = _ref6.labels,
+          labels = _ref6$labels === void 0 ? {} : _ref6$labels,
+          _ref6$item = _ref6.item,
+          item = _ref6$item === void 0 ? {} : _ref6$item;
       return function (g) {
-        g.attr('class', 'mouse-focus-label');
-        var rect = g.select(".mouse-focus-label-rect");
-        var text = g.select(".mouse-focus-label-text");
-        var y = text.select(".mouse-focus-label-y");
-        var x = text.select(".mouse-focus-label-x");
-        if (!rect.node()) rect = g.append("svg:rect");
-        if (!text.node()) text = g.append("svg:text");
-        if (!y.node()) y = text.append("svg:tspan");
-        if (!x.node()) x = text.append("svg:tspan");
-        y.text(labelY);
-        x.text(labelX); // Sets focus-label-text position to the left / right of the mouse-focus-line
+        var line = g.select('.mouse-focus-line');
+        var box = g.select('.mouse-focus-label');
+        if (!line.node()) line = g.append('svg:line');
+        if (!box.node()) box = g.append("g");
+        var rect = box.select(".mouse-focus-label-rect");
+        var text = box.select(".mouse-focus-label-text");
+        if (!rect.node()) rect = box.append("svg:rect");
+        if (!text.node()) text = box.append("svg:text"); // Sets focus-label-text position to the left / right of the mouse-focus-line
 
         var xAlign = 0;
         var yAlign = 0;
@@ -764,17 +487,30 @@
 
         if (xCoord) xAlign = xCoord + (xCoord < width / 2 ? 10 : -bbox.width - 10);
         if (yCoord) yAlign = Math.max(yCoord - bbox.height, L.Browser.webkit ? 0 : -Infinity);
+        line.attr('class', 'mouse-focus-line').attr('x2', xCoord).attr('y2', 0).attr('x1', xCoord).attr('y1', height);
+        box.attr('class', 'mouse-focus-label');
         rect.attr("class", "mouse-focus-label-rect").attr("x", xAlign - 5).attr("y", yAlign - 5).attr("width", bbox.width + 10).attr("height", bbox.height + 10).attr("rx", 3).attr("ry", 3);
         text.attr("class", "mouse-focus-label-text").style("font-weight", "700").attr("y", yAlign);
-        y.attr("class", "mouse-focus-label-y").attr("dy", "1em");
-        x.attr("class", "mouse-focus-label-x").attr("dy", "2em");
+        var label;
+
+        for (var i in labels) {
+          label = text.select(".mouse-focus-label-" + labels[i].name);
+
+          if (!label.size()) {
+            label = text.append("svg:tspan", ".mouse-focus-label-x").attr("class", "mouse-focus-label-" + labels[i].name).attr("dy", "1.5em");
+          }
+
+          label.text(typeof labels[i].value !== "function" ? labels[i].value : labels[i].value(item));
+        }
+
+        text.select('tspan').attr("dy", "1em");
         text.selectAll('tspan').attr("x", xAlign);
         return g;
       };
     };
-    var Ruler = function Ruler(_ref10) {
-      var height = _ref10.height,
-          width = _ref10.width;
+    var Ruler = function Ruler(_ref7) {
+      var height = _ref7.height,
+          width = _ref7.width;
       return function (g) {
         g.data([{
           "x": 0,
@@ -821,14 +557,67 @@
         return g;
       };
     };
-    var Domain = function Domain(_ref11) {
-      var min = _ref11.min,
-          max = _ref11.max,
-          attr = _ref11.attr,
-          name = _ref11.name,
-          forceBounds = _ref11.forceBounds;
+    var CheckPoint = function CheckPoint(_ref8) {
+      var point = _ref8.point,
+          height = _ref8.height,
+          width = _ref8.width,
+          x = _ref8.x,
+          y = _ref8.y;
+      return function (g) {
+        if (isNaN(x) || isNaN(y)) return g;
+
+        if (!point.item || !point.item.property('isConnected')) {
+          point.position = point.position || "bottom";
+          point.item = g.append('g');
+          point.item.append("svg:line").attr("y1", 0).attr("x1", 0).attr("style", "stroke: rgb(51, 51, 51); stroke-width: 0.5; stroke-dasharray: 2, 2;");
+          point.item.append("svg:circle").attr("class", " height-focus circle-lower").attr("r", 3);
+
+          if (point.label) {
+            point.item.append("svg:text").attr("dx", "4px").attr("dy", "-4px");
+          }
+        }
+
+        point.item.datum({
+          pos: point.position,
+          x: x,
+          y: y
+        }).attr("class", function (d) {
+          return "point " + d.pos;
+        }).attr("transform", function (d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        });
+        point.item.select('line').datum({
+          y2: {
+            'top': -y,
+            'bottom': height - y
+          }[point.position],
+          x2: {
+            'left': -x,
+            'right': width - x
+          }[point.position] || 0
+        }).attr("y2", function (d) {
+          return d.y2;
+        }).attr("x2", function (d) {
+          return d.x2;
+        });
+
+        if (point.label) {
+          point.item.select('text').text(point.label);
+        }
+
+        return g;
+      };
+    };
+    var Domain = function Domain(_ref9) {
+      var min = _ref9.min,
+          max = _ref9.max,
+          attr = _ref9.attr,
+          name = _ref9.name,
+          forceBounds = _ref9.forceBounds,
+          scale = _ref9.scale;
       return function (data) {
         attr = attr || name;
+        if (scale && scale.attr) attr = scale.attr;
         var domain = data && data.length ? d3.extent(data, function (d) {
           return d[attr];
         }) : [0, 1];
@@ -844,19 +633,19 @@
         return domain;
       };
     };
-    var Range = function Range(_ref12) {
-      var axis = _ref12.axis;
+    var Range = function Range(_ref10) {
+      var axis = _ref10.axis;
       return function (width, height) {
         if (axis == 'x') return [0, width];else if (axis == 'y') return [height, 0];
       };
     };
-    var Scale = function Scale(_ref13) {
-      var data = _ref13.data,
-          attr = _ref13.attr,
-          min = _ref13.min,
-          max = _ref13.max,
-          forceBounds = _ref13.forceBounds,
-          range = _ref13.range;
+    var Scale = function Scale(_ref11) {
+      var data = _ref11.data,
+          attr = _ref11.attr,
+          min = _ref11.min,
+          max = _ref11.max,
+          forceBounds = _ref11.forceBounds,
+          range = _ref11.range;
       return d3.scaleLinear().range(range).domain(Domain({
         min: min,
         max: max,
@@ -864,22 +653,22 @@
         forceBounds: forceBounds
       })(data));
     };
-    var Bisect = function Bisect(_ref14) {
-      var _ref14$data = _ref14.data,
-          data = _ref14$data === void 0 ? [0, 1] : _ref14$data,
-          scale = _ref14.scale,
-          x = _ref14.x,
-          attr = _ref14.attr;
+    var Bisect = function Bisect(_ref12) {
+      var _ref12$data = _ref12.data,
+          data = _ref12$data === void 0 ? [0, 1] : _ref12$data,
+          scale = _ref12.scale,
+          x = _ref12.x,
+          attr = _ref12.attr;
       return d3.bisector(function (d) {
         return d[attr];
       }).left(data, scale.invert(x));
     };
-    var Chart = function Chart(_ref15) {
-      var width = _ref15.width,
-          height = _ref15.height,
-          _ref15$margins = _ref15.margins,
-          margins = _ref15$margins === void 0 ? {} : _ref15$margins,
-          ruler = _ref15.ruler;
+    var Chart = function Chart(_ref13) {
+      var width = _ref13.width,
+          height = _ref13.height,
+          _ref13$margins = _ref13.margins,
+          margins = _ref13$margins === void 0 ? {} : _ref13$margins,
+          ruler = _ref13.ruler;
 
       var _width = width - margins.left - margins.right;
 
@@ -892,39 +681,32 @@
       var panes = {
         grid: g.append("g").attr("class", "grid"),
         area: g.append('g').attr("class", "area"),
-        point: g.append('g').attr("class", "point"),
         axis: g.append('g').attr("class", "axis"),
+        point: g.append('g').attr("class", "point"),
         brush: g.append("g").attr("class", "brush"),
         tooltip: g.append("g").attr("class", "tooltip").attr('display', 'none'),
         ruler: g.append('g').attr('class', 'ruler'),
         legend: g.append('g').attr("class", "legend")
       }; // SVG Paths
 
-      var clipPath = panes.area.append("svg:clipPath").attr("id", 'elevation-clipper');
-      var clipRect = clipPath.append("svg:rect"); // Canvas Paths
+      var mask = panes.area.append("svg:mask").attr("id", 'elevation-clipper').attr('fill-opacity', 1);
+      var maskRect = mask.append("svg:rect").attr('class', 'zoom').attr('fill', 'white'); // white = transparent
+      // Canvas Paths
 
-      var foreignObject = panes.area.append('svg:foreignObject');
+      var foreignObject = panes.area.append('svg:foreignObject').attr('mask', 'url(#' + mask.attr('id') + ')');
       var canvas = foreignObject.append('xhtml:canvas').attr('class', 'canvas-plot');
-      var context = canvas.node().getContext('2d'); // Mouse Focus
+      var context = canvas.node().getContext('2d'); // Add tooltip
 
-      var dragG = panes.ruler;
-      var focusG = panes.tooltip;
-      var brushG = panes.brush;
-      focusG.append('svg:line').call(MouseFocusLine({
-        xCoord: 0,
-        height: _height
-      }));
-      focusG.append("g").call(MouseFocusLabel({
+      panes.tooltip.call(Tooltip({
         xCoord: 0,
         yCoord: 0,
         height: _height,
         width: _width,
-        labelX: "",
-        labelY: ""
+        labels: {}
       })); // Add the brushing
 
       var brush = d3.brushX().on('start.cursor end.cursor brush.cursor', function () {
-        return brushG.select(".overlay").attr('cursor', null);
+        return panes.brush.select(".overlay").attr('cursor', null);
       }); // Scales
 
       var scale = function scale(opts) {
@@ -935,11 +717,9 @@
       };
 
       var utils = {
-        clipPath: clipPath,
+        mask: mask,
         canvas: canvas,
         context: context,
-        dragG: dragG,
-        focusG: focusG,
         brush: brush
       };
       var chart = {
@@ -950,32 +730,37 @@
         scale: scale
       }; // Resize
 
-      chart._resize = function (_ref16) {
-        var width = _ref16.width,
-            height = _ref16.height,
-            _ref16$margins = _ref16.margins,
-            margins = _ref16$margins === void 0 ? {} : _ref16$margins,
-            ruler = _ref16.ruler;
+      chart._resize = function (_ref14) {
+        var width = _ref14.width,
+            height = _ref14.height,
+            _ref14$margins = _ref14.margins,
+            margins = _ref14$margins === void 0 ? {} : _ref14$margins,
+            ruler = _ref14.ruler;
 
         var _width = width - margins.left - margins.right;
 
         var _height = height - margins.top - margins.bottom;
 
         svg.attr("viewBox", "0 0 ".concat(width, " ").concat(height)).attr("width", width).attr("height", height);
-        g.attr("transform", "translate(" + margins.left + "," + margins.top + ")");
-        clipRect.attr("x", 0).attr("y", 0).attr("width", _width).attr("height", _height);
+        g.attr("transform", "translate(" + margins.left + "," + margins.top + ")"); // Partially fix: https://github.com/Raruto/leaflet-elevation/issues/123
+
+        if (/Mac|iPod|iPhone|iPad/.test(navigator.platform) && /AppleWebkit/i.test(navigator.userAgent)) {
+          canvas.style("transform", "translate(" + margins.left + "px," + margins.top + "px)");
+        }
+
+        maskRect.attr("x", 0).attr("y", 0).attr("width", _width).attr("height", _height);
         foreignObject.attr('width', _width).attr('height', _height);
         canvas.attr('width', _width).attr('height', _height);
 
         if (ruler) {
-          dragG.call(Ruler({
+          panes.ruler.call(Ruler({
             height: _height,
             width: _width
           }));
         }
 
-        brushG.call(brush.extent([[0, 0], [_width, _height]]));
-        brushG.select(".overlay").attr('cursor', null);
+        panes.brush.call(brush.extent([[0, 0], [_width, _height]]));
+        panes.brush.select(".overlay").attr('cursor', null);
         chart._width = _width;
         chart._height = _height;
         chart.svg.dispatch('resize', {
@@ -1014,13 +799,11 @@
         Path: Path,
         Axis: Axis,
         Grid: Grid,
-        HeightFocusLine: HeightFocusLine,
-        HeightFocusLabel: HeightFocusLabel,
-        HeightFocusMarker: HeightFocusMarker,
+        PositionMarker: PositionMarker,
         LegendItem: LegendItem,
-        MouseFocusLine: MouseFocusLine,
-        MouseFocusLabel: MouseFocusLabel,
+        Tooltip: Tooltip,
         Ruler: Ruler,
+        CheckPoint: CheckPoint,
         Domain: Domain,
         Range: Range,
         Scale: Scale,
@@ -1031,6 +814,8 @@
     var Chart$1 = L.Class.extend({
       includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
       initialize: function initialize(opts, control) {
+        var _this = this;
+
         this.options = opts;
         this.control = control;
         this._data = []; // cache registered components
@@ -1042,7 +827,7 @@
           grids: {},
           axes: {},
           legendItems: {},
-          focusLabels: {}
+          tooltipItems: {}
         };
         this._scales = {};
         this._domains = {};
@@ -1050,15 +835,6 @@
         this._paths = {};
         this._brushEnabled = opts.dragging;
         this._zoomEnabled = opts.zooming;
-
-        if (opts.imperial) {
-          this._xLabel = "mi";
-          this._yLabel = "ft";
-        } else {
-          this._xLabel = opts.xLabel;
-          this._yLabel = opts.yLabel;
-        }
-
         var chart = this._chart = Chart(opts); // SVG Container
 
         var svg = this._container = chart.svg; // Panes
@@ -1067,25 +843,31 @@
         this._area = chart.pane('area');
         this._point = chart.pane('point');
         this._axis = chart.pane('axis');
-        this._legend = chart.pane('legend'); // Scales
+        this._legend = chart.pane('legend');
+        this._tooltip = chart.pane('tooltip');
+        this._ruler = chart.pane('ruler'); // Scales
 
         this._initScale(); // Helpers
 
 
-        this._clipPath = chart.get('clipPath');
-        this._canvas = chart.get('canvas');
+        this._mask = chart.get('mask');
         this._context = chart.get('context');
-        this._dragG = chart.get('dragG');
-        this._focusG = chart.get('focusG');
-        this._brush = chart.get('brush'); // Tooltip
-
-        this._focusline = this._focusG.select('.mouse-focus-line');
-        this._focuslabel = this._focusG.select('.mouse-focus-label');
+        this._brush = chart.get('brush');
         this._zoom = d3.zoom();
         this._drag = d3.drag(); // Interactions
 
         this._initInteractions(); // svg.on('resize', (e)=>console.log(e.detail));
+        // Handle multi-track segments (BETA)
 
+
+        this._maskGaps = [];
+        control.on('eletrack_added', function (e) {
+          _this._maskGaps.push(e.index);
+
+          control.once('eledata_updated', function (e) {
+            return _this._maskGaps.push(e.index);
+          });
+        });
       },
       update: function update(props) {
         if (props) {
@@ -1106,65 +888,47 @@
         return this;
       },
       render: function render() {
-        var _this = this;
+        var _this2 = this;
 
         return function (container) {
           return container.append(function () {
-            return _this._container.node();
+            return _this2._container.node();
           });
         };
       },
       clear: function clear() {
         this._resetDrag();
 
+        this._hideDiagramIndicator();
+
         this._area.selectAll('path').attr("d", "M0 0");
 
-        this._context.clearRect(0, 0, this._width(), this._height());
+        this._context.clearRect(0, 0, this._width(), this._height()); // if (this._path) {
+        // this._x.domain([0, 1]);
+        // this._y.domain([0, 1]);
+        // }
 
-        if (this._path) ;
+
+        this._maskGaps = [];
+
+        this._mask.selectAll(".gap").remove();
       },
       _drawPath: function _drawPath(name) {
-        var opts = this.options;
-        var ctx = this._context;
         var path = this._paths[name];
         var area = this._props.areas[name];
-        var node = path.node();
-        var scaleX = this._scales[area.scaleX];
-        var scaleY = this._scales[area.scaleY];
-        area = L.extend({}, area, {
+        path.datum(this._data).attr("d", Area(L.extend({}, area, {
           width: this._width(),
           height: this._height(),
-          scaleX: scaleX,
-          scaleY: scaleY
-        });
-
-        if (!scaleY || !scaleY) {
-          return console.warn('Unable to render path:' + name);
-        }
-
-        path.datum(this._data).attr("d", Area(area));
+          scaleX: this._scales[area.scaleX],
+          scaleY: this._scales[area.scaleY]
+        })));
         if (path.classed('leaflet-hidden')) return;
 
-        if (opts.preferCanvas) {
-          path.classed('canvas-path', true);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          var p = new Path2D(path.attr('d'));
-          ctx.strokeStyle = path.attr('stroke');
-          ctx.fillStyle = path.attr('fill');
-          ctx.lineWidth = 1.25;
-          ctx.globalCompositeOperation = 'source-over'; // stroke opacity
-
-          ctx.globalAlpha = path.attr('stroke-opacity') || 0.3;
-          ctx.stroke(p); // fill opacity
-
-          ctx.globalAlpha = path.attr('fill-opacity') || 0.45;
-          ctx.fill(p);
-          ctx.globalAlpha = 1;
-          ctx.closePath();
+        if (this.options.preferCanvas) {
+          drawCanvas(this._context, path);
         } else {
           this._area.append(function () {
-            return node;
+            return path.node();
           });
         }
       },
@@ -1184,41 +948,43 @@
        * Initialize "d3-brush".
        */
       _initBrush: function _initBrush(e) {
-        var _this2 = this;
+        var _this3 = this;
 
         var brush = function brush(e) {
+          if (!_this3._data.length) return;
           var extent = e.selection;
 
           if (extent) {
-            var start = _this2._findIndexForXCoord(extent[0]);
+            var start = _this3._findIndexForXCoord(extent[0]);
 
-            var end = _this2._findIndexForXCoord(extent[1]);
+            var end = _this3._findIndexForXCoord(extent[1]);
 
-            _this2.fire('dragged', {
-              dragstart: _this2._data[start],
-              dragend: _this2._data[end]
+            _this3.fire('dragged', {
+              dragstart: _this3._data[start],
+              dragend: _this3._data[end]
             });
           }
         };
 
         var focus = function focus(e) {
+          if (!_this3._data.length) return;
           if (e.type == 'brush' && !e.sourceEvent) return;
 
-          var rect = _this2._chart.panes.brush.select('.overlay').node();
+          var rect = _this3._chart.panes.brush.select('.overlay').node();
 
           var coords = d3.pointers(e, rect)[0];
           var xCoord = coords[0];
 
-          var item = _this2._data[_this2._findIndexForXCoord(xCoord)];
+          var item = _this3._data[_this3._findIndexForXCoord(xCoord)];
 
-          _this2.fire("mouse_move", {
+          _this3.fire("mouse_move", {
             item: item,
             xCoord: xCoord
           });
         };
 
         this._brush.filter(function (e) {
-          return _this2._brushEnabled && !e.shiftKey && !e.button;
+          return _this3._brushEnabled && !e.shiftKey && !e.button;
         }).on("end.update", brush).on("brush.update", focus);
 
         this._chart.panes.brush.on("mouseenter.focus touchstart.focus", this.fire.bind(this, "mouse_enter")).on("mouseout.focus touchend.focus", this.fire.bind(this, "mouse_out")).on("mousemove.focus touchmove.focus", focus);
@@ -1228,7 +994,7 @@
        * Initialize "d3-zoom"
        */
       _initClipper: function _initClipper() {
-        var _this3 = this;
+        var _this4 = this;
 
         var svg = this._container;
         var margin = this.options.margins;
@@ -1238,42 +1004,54 @@
           if (e.sourceEvent && e.sourceEvent.type == "mousedown") svg.style('cursor', 'grabbing');
 
           if (e.transform.k == 1 && e.transform.x == 0) {
-            _this3._container.classed('zoomed', true);
+            _this4._container.classed('zoomed', true); // Apply d3-zoom (bind <clipPath> mask)
+
+
+            if (_this4._mask) {
+              _this4._point.attr('mask', 'url(#' + _this4._mask.attr('id') + ')');
+            }
           }
 
-          _this3.zooming = true;
+          _this4.zooming = true;
         };
 
         var onEnd = function onEnd(e) {
           if (e.transform.k == 1 && e.transform.x == 0) {
-            _this3._container.classed('zoomed', false);
+            _this4._container.classed('zoomed', false); // Apply d3-zoom (bind <clipPath> mask)
+
+
+            if (_this4._mask) {
+              _this4._point.attr('mask', null);
+            }
           }
 
-          _this3.zooming = false;
+          _this4.zooming = false;
           svg.style('cursor', '');
         };
 
         var onZoom = function onZoom(e) {
           // TODO: find a faster way to redraw the chart.
-          _this3.zooming = false;
+          _this4.zooming = false;
 
-          _this3._updateScale(); // hacky way for restoring x scale when zooming out
+          _this4._updateScale(); // hacky way for restoring x scale when zooming out
 
 
-          _this3.zooming = true;
-          _this3._scales.distance = _this3._x = e.transform.rescaleX(_this3._x); // calculate x scale at zoom level
+          _this4.zooming = true;
+          _this4._scales.distance = _this4._x = e.transform.rescaleX(_this4._x); // calculate x scale at zoom level
 
-          _this3._resetDrag();
+          if (_this4._scales.time) _this4._scales.time = e.transform.rescaleX(_this4._scales.time); // calculate x scale at zoom level
+
+          _this4._resetDrag();
 
           if (e.sourceEvent && e.sourceEvent.type == "mousemove") {
-            _this3._hideDiagramIndicator();
+            _this4._hideDiagramIndicator();
           }
 
-          _this3.fire('zoom');
+          _this4.fire('zoom');
         };
 
         zoom.scaleExtent([1, 10]).extent([[margin.left, 0], [this._width() - margin.right, this._height()]]).translateExtent([[margin.left, -Infinity], [this._width() - margin.right, Infinity]]).filter(function (e) {
-          return _this3._zoomEnabled && (e.shiftKey || e.buttons == 4);
+          return _this4._zoomEnabled && (e.shiftKey || e.buttons == 4);
         }).on("start", onStart).on("end", onEnd).on("zoom", onZoom);
         svg.call(zoom); // add zoom functionality to "svg" group
         // d3.select("body").on("keydown.grabzoom keyup.grabzoom", (e) => svg.style('cursor', e.shiftKey ? 'move' : ''));
@@ -1292,7 +1070,7 @@
        * Toggle chart data on legend click
        */
       _initLegend: function _initLegend() {
-        var _this4 = this;
+        var _this5 = this;
 
         this._container.on('legend_clicked', function (e) {
           var _e$detail = e.detail,
@@ -1312,9 +1090,9 @@
 
           toggleClass(path, 'leaflet-hidden', enabled);
 
-          _this4._updateArea();
+          _this5._updateArea();
 
-          _this4.fire("elepath_toggle", {
+          _this5.fire("elepath_toggle", {
             path: path,
             name: name,
             legend: legend,
@@ -1327,7 +1105,7 @@
        * Initialize "ruler".
        */
       _initRuler: function _initRuler() {
-        var _this5 = this;
+        var _this6 = this;
 
         if (!this.options.ruler) return; // const yMax      = this._height();
 
@@ -1335,41 +1113,41 @@
         var drag = this._drag;
 
         var label = function label(e, d) {
-          var yMax = _this5._height();
+          var yMax = _this6._height();
 
-          var y = _this5._dragG.data()[0].y;
+          var y = _this6._ruler.data()[0].y;
 
-          if (y >= yMax || y <= 0) _this5._dragG.select(".horizontal-drag-label").text('');
+          if (y >= yMax || y <= 0) _this6._ruler.select(".horizontal-drag-label").text('');
 
-          _this5._hideDiagramIndicator();
+          _this6._hideDiagramIndicator();
         };
 
         var position = function position(e, d) {
-          var yMax = _this5._height();
+          var yMax = _this6._height();
 
-          var yCoord = d3.pointers(e, _this5._area.node())[0][1];
+          var yCoord = d3.pointers(e, _this6._area.node())[0][1];
           var y = yCoord > 0 ? yCoord < yMax ? yCoord : yMax : 0;
 
-          var z = _this5._y.invert(y);
+          var z = _this6._y.invert(y);
 
-          var data = L.extend(_this5._dragG.data()[0], {
+          var data = L.extend(_this6._ruler.data()[0], {
             y: y
           });
 
-          _this5._dragG.data([data]).attr("transform", function (d) {
+          _this6._ruler.data([data]).attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
           }).classed('active', y < yMax);
 
-          _this5._container.select(".horizontal-drag-label").text(formatNum(z) + " " + _this5._yLabel);
+          _this6._container.select(".horizontal-drag-label").text(formatNum(z) + " " + (_this6.options.imperial ? 'ft' : 'm'));
 
-          _this5.fire('ruler_filter', {
-            coords: yCoord < yMax && yCoord > 0 ? _this5._findCoordsForY(yCoord) : []
+          _this6.fire('ruler_filter', {
+            coords: yCoord < yMax && yCoord > 0 ? _this6._findCoordsForY(yCoord) : []
           });
         };
 
         drag.on("start end", label).on("drag", position);
 
-        this._dragG.call(drag);
+        this._ruler.call(drag);
       },
 
       /**
@@ -1425,7 +1203,9 @@
         var opts = this.options;
         var scale = props.scale;
 
-        if (typeof scale !== 'function') {
+        if (typeof this._scales[props.name] === 'function') {
+          props.scale = this._scales[props.name]; // retrieve cached scale
+        } else if (typeof scale !== 'function') {
           scale = L.extend({
             data: this._data,
             forceBounds: opts.forceAxisBounds
@@ -1448,7 +1228,7 @@
       },
 
       /**
-       * Add a waypoint of interest over the chart
+       * Add a point of interest over the chart
        */
       _registerCheckPoint: function _registerCheckPoint(point) {
         if (!this._data.length) return;
@@ -1462,49 +1242,18 @@
           x = this._x(point.dist);
           item = this._data[this._findIndexForXCoord(x)];
           y = this._y(item.z);
-        } else if (isNaN(x) || isNaN(y)) return;
-
-        if (!point.item || !point.item.property('isConnected')) {
-          point.position = point.position || "bottom";
-          point.item = this._point.append('g');
-          point.item.append("svg:line").attr("y1", 0).attr("x1", 0).attr("style", "stroke: rgb(51, 51, 51); stroke-width: 0.5; stroke-dasharray: 2, 2;");
-          point.item.append("svg:circle").attr("class", " height-focus circle-lower").attr("r", 3);
-
-          if (point.label) {
-            point.item.append("svg:text").attr("dx", "4px").attr("dy", "-4px");
-          }
         }
 
-        point.item.datum({
-          pos: point.position,
+        this._point.call(CheckPoint({
+          point: point,
+          width: this._width(),
+          height: this._height(),
           x: x,
           y: y
-        }).attr("class", function (d) {
-          return "point " + d.pos;
-        }).attr("transform", function (d) {
-          return "translate(" + d.x + "," + d.y + ")";
-        });
-        point.item.select('line').datum({
-          y2: {
-            'top': -y,
-            'bottom': this._height() - y
-          }[point.position],
-          x2: {
-            'left': -x,
-            'right': this._width() - x
-          }[point.position] || 0
-        }).attr("y2", function (d) {
-          return d.y2;
-        }).attr("x2", function (d) {
-          return d.x2;
-        });
-
-        if (point.label) {
-          point.item.select('text').text(point.label);
-        }
+        }));
       },
-      _registerFocusLabel: function _registerFocusLabel(props) {
-        this._props.focusLabels[props.name] = props;
+      _registerTooltip: function _registerTooltip(props) {
+        this._props.tooltipItems[props.name] = props;
       },
       _updateArea: function _updateArea() {
         var paths = this._paths; // Reset and update chart profiles
@@ -1567,13 +1316,32 @@
         });
       },
       _updateClipper: function _updateClipper() {
+        var _this7 = this;
+
         var margin = this.options.margins;
 
-        this._zoom.scaleExtent([1, 10]).extent([[margin.left, 0], [this._width() - margin.right, this._height()]]).translateExtent([[margin.left, -Infinity], [this._width() - margin.right, Infinity]]);
+        this._zoom.scaleExtent([1, 10]).extent([[margin.left, 0], [this._width() - margin.right, this._height()]]).translateExtent([[margin.left, -Infinity], [this._width() - margin.right, Infinity]]); // Apply svg mask on multi-track segments (BETA)
+
+
+        this._mask.selectAll(".gap").remove();
+
+        this._maskGaps.forEach(function (d, i) {
+          if (i >= _this7._maskGaps.length - 2) return;
+          var d1 = _this7._data[_this7._maskGaps[i]];
+          var d2 = _this7._data[_this7._maskGaps[i + 1]];
+
+          var x1 = _this7._x(_this7._data[_this7._findIndexForLatLng(d1.latlng)].dist);
+
+          var x2 = _this7._x(_this7._data[_this7._findIndexForLatLng(d2.latlng)].dist);
+
+          _this7._mask.append("rect").attr("x", x1).attr("y", 0).attr("width", x2 - x1).attr("height", _this7._height()).attr('class', 'gap').attr('fill-opacity', '0.8').attr("fill", 'black'); // black = hide
+
+        });
       },
       _updateLegend: function _updateLegend() {
-        var _this6 = this;
+        var _this8 = this;
 
+        if (this.options.legend === false) return;
         var legends = this._props.legendItems;
         var legend; // Reset legend items
 
@@ -1609,16 +1377,16 @@
 
         var xAxesB = this._axis.selectAll('.x.axis.bottom').nodes().length;
 
-        var marginB = 60 + xAxesB * 2;
+        var marginB = 30 + xAxesB * 2;
         var marginR = n * 30; // Adjust chart right margins
 
-        if (n && this.options.margins.right != marginR) {
+        if (n && this.options.margins.right < marginR) {
           this.options.margins.right = marginR;
           this.fire('margins_updated');
         } // Adjust chart bottom margins
 
 
-        if (xAxesB && this.options.margins.bottom != marginB) {
+        if (xAxesB && this.options.margins.bottom < marginB) {
           this.options.margins.bottom = marginB;
           this.fire('margins_updated');
         }
@@ -1627,21 +1395,21 @@
           var legend = d3.select(n[i]);
           var rect = legend.select('rect');
           var name = legend.attr('data-name');
-          var path = _this6._paths[name];
+          var path = _this8._paths[name];
           var tx = v[i] * 55;
           var ty = xAxesB * 2;
           legend // Adjust legend item positions
           .attr("transform", "translate(" + tx + ", " + ty + ")"); // Set initial state (disabled controls)
 
-          if (name in _this6.options && _this6.options[name] == 'disabled') {
+          if (name in _this8.options && _this8.options[name] == 'disabled') {
             path.classed('leaflet-hidden', true);
             legend.select('text').style('text-decoration-line', 'line-through');
             legend.select('rect').style('fill-opacity', '0');
           } // Apply d3-zoom (bind <clipPath> mask)
 
 
-          if (_this6._clipPath) {
-            path.attr('clip-path', 'url(#' + _this6._clipPath.attr('id') + ')');
+          if (_this8._mask) {
+            path.attr('mask', 'url(#' + _this8._mask.attr('id') + ')');
           }
         });
       },
@@ -1650,13 +1418,9 @@
           x: this._x,
           y: this._y
         };
-        var opts = this.options;
-        var scales = this._scales;
-        var d = this._domains;
-        var r = this._ranges;
 
-        for (var i in scales) {
-          scales[i].domain(d[i](this._data)).range(r[i](this._width(), this._height()));
+        for (var i in this._scales) {
+          this._scales[i].domain(this._domains[i](this._data)).range(this._ranges[i](this._width(), this._height()));
         }
 
         return {
@@ -1714,10 +1478,10 @@
        * Finds a data entry for a given x-coordinate of the diagram
        */
       _findIndexForXCoord: function _findIndexForXCoord(x) {
-        var _this7 = this;
+        var _this9 = this;
 
         return d3.bisector(function (d) {
-          return d[_this7.options.xAttr];
+          return d[_this9.options.xAttr];
         }).left(this._data || [0, 1], this._x.invert(x));
       },
 
@@ -1762,99 +1526,72 @@
        * Display distance and altitude level ("focus-rect").
        */
       _showDiagramIndicator: function _showDiagramIndicator(item, xCoordinate) {
-        var opts = this.options;
-
-        var yCoordinate = this._y(item[opts.yAttr]);
-
-        this._focusG.attr("display", null);
-
-        this._focusline.call(MouseFocusLine({
+        this._tooltip.attr("display", null).call(Tooltip({
           xCoord: xCoordinate,
-          height: this._height()
-        }));
-
-        this._focuslabel.call(MouseFocusLabel({
-          xCoord: xCoordinate,
-          yCoord: yCoordinate,
+          yCoord: this._y(item[this.options.yAttr]),
           height: this._height(),
           width: this._width(),
-          labelX: d3.format("." + opts.decimalsX + "f")(item[opts.xAttr]) + " " + this._xLabel,
-          labelY: d3.format("." + opts.decimalsY + "f")(item[opts.yAttr]) + " " + this._yLabel
-        })); // this._focuslabel.selectAll('tspan').data(Object.values(this._focuslabels));
-
-
-        var labels = this._props.focusLabels;
-
-        var tooltip = this._focuslabel.select('text');
-
-        var label;
-
-        for (var i in labels) {
-          label = tooltip.select(".mouse-focus-label-" + labels[i].name);
-
-          if (!label.size()) {
-            label = tooltip.append("svg:tspan", ".mouse-focus-label-x").attr("class", "mouse-focus-label-" + labels[i].name).attr("dy", "1.5em");
-          }
-
-          label.text(typeof labels[i].value !== "function" ? labels[i].value : labels[i].value(item));
-
-          this._focuslabel.select('.mouse-focus-label-x').attr("dy", "1.5em");
-        }
+          labels: this._props.tooltipItems,
+          item: item
+        }));
       },
       _hideDiagramIndicator: function _hideDiagramIndicator() {
-        this._focusG.attr("display", 'none');
+        this._tooltip.attr("display", 'none');
       }
     });
+
+    function _typeof(obj) {
+      "@babel/helpers - typeof";
+
+      if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+        _typeof = function (obj) {
+          return typeof obj;
+        };
+      } else {
+        _typeof = function (obj) {
+          return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+        };
+      }
+
+      return _typeof(obj);
+    }
 
     var Marker = L.Class.extend({
       initialize: function initialize(options) {
         this.options = options;
 
-        if (this.options.imperial) {
-          this._xLabel = "mi";
-          this._yLabel = "ft";
-        } else {
-          this._xLabel = this.options.xLabel;
-          this._yLabel = this.options.yLabel;
+        switch (this.options.marker) {
+          case 'elevation-line':
+            // this._container = d3.create("g").attr("class", "height-focus-group");
+            break;
+
+          case 'position-marker':
+            // this._marker   = L.circleMarker([0, 0], { pane: 'overlayPane', radius: 6, fillColor: '#fff', fillOpacity:1, color: '#000', weight:1, interactive: false });
+            this._marker = L.marker([0, 0], {
+              icon: this.options.markerIcon,
+              zIndexOffset: 1000000,
+              interactive: false
+            });
+            break;
         }
 
-        if (this.options.marker == 'elevation-line') {
-          // this._container = d3.create("g").attr("class", "height-focus-group");
-          this._focusline = d3.create('svg:line');
-          this._focusmarker = d3.create("svg:circle");
-          this._focuslabel = d3.create("svg:text");
-        } else if (this.options.marker == 'position-marker') {
-          // this._marker   = L.circleMarker([0, 0], { pane: 'overlayPane', radius: 6, fillColor: '#fff', fillOpacity:1, color: '#000', weight:1, interactive: false });
-          this._marker = L.marker([0, 0], {
-            icon: this.options.markerIcon,
-            zIndexOffset: 1000000,
-            interactive: false
-          });
-        }
-
-        this._focuslabels = {};
+        this._labels = {};
         return this;
       },
       addTo: function addTo(map) {
-        var _this = this;
-
         this._map = map;
 
-        if (this.options.marker == 'elevation-line') {
-          var g = this._container = d3.select(map.getPane('elevationPane')).select("svg > g").attr("class", "height-focus-group");
-          g.append(function () {
-            return _this._focusline.node();
-          });
-          g.append(function () {
-            return _this._focusmarker.node();
-          });
-          g.append(function () {
-            return _this._focuslabel.node();
-          });
-        } else if (this.options.marker == 'position-marker') {
-          this._marker.addTo(map, {
-            pane: 'overlayPane'
-          });
+        switch (this.options.marker) {
+          case 'elevation-line':
+            this._container = d3.select(map.getPane('elevationPane')).select("svg > g").call(PositionMarker({}));
+            break;
+
+          case 'position-marker':
+            this._marker.addTo(map, {
+              pane: 'overlayPane'
+            });
+
+            break;
         }
 
         return this;
@@ -1868,62 +1605,36 @@
         if (!props) return;
         if (props.options) this.options = props.options;
         if (!this._map) this.addTo(props.map);
-        var opts = this.options;
-        var map = this._map;
         this._latlng = props.item.latlng;
-        var pos = map.latLngToLayerPoint(this._latlng);
 
-        if (map._rotate) {
-          pos = map.rotatedPointToMapPanePoint(pos);
-        }
+        switch (this.options.marker) {
+          case 'elevation-line':
+            if (this._container) {
+              var point = this._map.latLngToLayerPoint(this._latlng);
 
-        var point = L.extend({}, props.item, pos);
+              point = L.extend({}, props.item, this._map._rotate ? this._map.rotatedPointToMapPanePoint(point) : point);
 
-        if (this.options.marker == 'elevation-line') {
-          var normalizedAlt = this._height() / props.maxElevation * point.z;
-          var normalizedY = point.y - normalizedAlt;
+              this._container.classed("leaflet-hidden", false);
 
-          this._container.classed("leaflet-hidden", false);
-
-          this._focusmarker.call(HeightFocusMarker({
-            theme: opts.theme,
-            xCoord: point.x,
-            yCoord: point.y
-          }));
-
-          this._focusline.call(HeightFocusLine({
-            theme: opts.theme,
-            xCoord: point.x,
-            yCoord: point.y,
-            length: normalizedY
-          }));
-
-          this._focuslabel.call(HeightFocusLabel({
-            theme: opts.theme,
-            xCoord: point.x,
-            yCoord: normalizedY,
-            label: d3.format("." + opts.decimalsY + "f")(point[opts.yAttr]) + " " + this._yLabel
-          }));
-
-          var labels = this._focuslabels;
-          var tooltip = this._focuslabel;
-          var label;
-
-          for (var i in labels) {
-            label = tooltip.select(".height-focus-" + labels[i].name);
-
-            if (!label.size()) {
-              label = tooltip.append("svg:tspan").attr("class", "height-focus-" + labels[i].name).attr("dy", "1.5em");
+              this._container.call(PositionMarker({
+                theme: this.options.theme,
+                xCoord: point.x,
+                yCoord: point.y,
+                length: point.y - this._height() / props.maxElevation * point.z,
+                // normalized Y
+                labels: this._labels,
+                item: point
+              }));
             }
 
-            label.text(typeof labels[i].value !== "function" ? labels[i].value : labels[i].value(props.item));
+            break;
 
-            this._focuslabel.select('.height-focus-y').attr("dy", "-1.5em");
-          }
-        } else if (this.options.marker == 'position-marker') {
-          removeClass(this._marker.getElement(), 'leaflet-hidden');
+          case 'position-marker':
+            removeClass(this._marker.getElement(), 'leaflet-hidden');
 
-          this._marker.setLatLng(this._latlng);
+            this._marker.setLatLng(this._latlng);
+
+            break;
         }
       },
 
@@ -1933,10 +1644,15 @@
       remove: function remove() {
         this._props = null;
 
-        if (this.options.marker == 'elevation-line') {
-          if (this._container) this._container.classed("leaflet-hidden", true);
-        } else if (this.options.marker == 'position-marker') {
-          addClass(this._marker.getElement(), 'leaflet-hidden');
+        switch (this.options.marker) {
+          case 'elevation-line':
+            this._container && this._container.classed("leaflet-hidden", true);
+            break;
+
+          case 'position-marker':
+            addClass(this._marker.getElement(), 'leaflet-hidden');
+
+            break;
         }
       },
       getLatLng: function getLatLng() {
@@ -1950,8 +1666,8 @@
         var opts = this.options;
         return opts.height - opts.margins.top - opts.margins.bottom;
       },
-      _registerFocusLabel: function _registerFocusLabel(props) {
-        this._focuslabels[props.name] = props;
+      _registerTooltip: function _registerTooltip(props) {
+        this._labels[props.name] = props;
       }
     });
 
@@ -1996,7 +1712,6 @@
       collapsed: false,
       detached: true,
       distance: true,
-      distanceFactor: 1,
       distanceMarkers: false,
       decimalsX: 2,
       decimalsY: 0,
@@ -2005,32 +1720,11 @@
       elevationDiv: "#elevation-div",
       followMarker: true,
       forceAxisBounds: false,
-      gpxOptions: {
-        async: true,
-        marker_options: {
-          startIconUrl: '../images/pin-icon-start.png', //null,
-          endIconUrl: '../images/pin-icon-end.png', //null,
-          shadowUrl: '../images/pin-shadow.png', //null,
-          wptIcons: {
-            '': L.divIcon({
-              className: 'elevation-waypoint-marker',
-              html: '<i class="elevation-waypoint-icon"></i>',
-              iconSize: [30, 30],
-              iconAnchor: [8, 30]
-            })
-          }
-        }
-      },
       height: 200,
-      heightFactor: 1,
       imperial: false,
       interpolation: "curveLinear",
       lazyLoadJS: true,
       legend: true,
-      loadData: {
-        defer: false,
-        lazy: false
-      },
       margins: {
         top: 30,
         right: 30,
@@ -2044,7 +1738,6 @@
         iconSize: [32, 32],
         iconAnchor: [16, 16]
       }),
-      placeholder: false,
       position: "topright",
       polyline: {
         className: 'elevation-polyline',
@@ -2063,7 +1756,6 @@
       ruler: true,
       skipNullZCoords: false,
       theme: "lightblue-theme",
-      responsive: true,
       summary: 'inline',
       slope: false,
       speed: false,
@@ -2071,10 +1763,21 @@
       time: false,
       timeFactor: 3600,
       timeFormat: false,
+      timestamps: false,
       sDeltaMax: undefined,
       sInterpolation: "curveStepAfter",
       sRange: undefined,
       width: 600,
+      waypoints: true,
+      wptIcons: {
+        '': L.divIcon({
+          className: 'elevation-waypoint-marker',
+          html: '<i class="elevation-waypoint-icon default"></i>',
+          iconSize: [30, 30],
+          iconAnchor: [8, 30]
+        })
+      },
+      wptLabels: true,
       xAttr: "dist",
       xLabel: "km",
       xTicks: undefined,
@@ -2093,10 +1796,10 @@
       __mileFactor: 0.621371,
       __footFactor: 3.28084,
       __D3: 'https://unpkg.com/d3@6.5.0/dist/d3.min.js',
-      __TOGEOJSON: 'https://unpkg.com/@tmcw/togeojson@4.3.0/dist/togeojson.umd.js',
+      __TOGEOJSON: 'https://unpkg.com/@tmcw/togeojson@4.5.0/dist/togeojson.umd.js',
       __LGEOMUTIL: 'https://unpkg.com/leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.js',
       __LALMOSTOVER: 'https://unpkg.com/leaflet-almostover@1.0.1/src/leaflet.almostover.js',
-      __LDISTANCEM: 'https://unpkg.com/@raruto/leaflet-elevation@1.6.7/libs/leaflet-distance-marker.min.js',
+      __LDISTANCEM: 'https://unpkg.com/@raruto/leaflet-elevation@1.9.3/libs/leaflet-distance-marker.min.js',
 
       /*
        * Add data to the diagram either from GPX or GeoJSON and update the axis domain and data
@@ -2104,11 +1807,11 @@
       addData: function addData(d, layer) {
         var _this = this;
 
-        if ((typeof layer === "undefined" || layer === null) && d.on) {
-          layer = d;
-        }
+        this.lazyLoad(this.__D3).then(function () {
+          if (typeof layer === "undefined" && d.on) {
+            layer = d;
+          }
 
-        Elevation._d3LazyLoader = lazyLoader(this.__D3, (typeof d3 === "undefined" ? "undefined" : _typeof(d3)) !== 'object' || !this.options.lazyLoadJS, Elevation._d3LazyLoader).then(function () {
           _this._addData(d);
 
           _this._addLayer(layer);
@@ -2143,12 +1846,48 @@
        */
       clear: function clear() {
         if (this._marker) this._marker.remove();
-        if (this._chart) this._chart.clear();
-        if (this._layers) this._layers.clearLayers();
+        if (this._chart) this._clearChart();
+        if (this._layers) this._clearLayers();
+        if (this._markers) this._clearMarkers();
         this._data = [];
         this.track_info = {};
 
         this._fireEvt("eledata_clear");
+
+        this._updateChart();
+      },
+      _clearChart: function _clearChart() {
+        var _this2 = this;
+
+        if (this._events && this._events.elechart_updated) {
+          this._events.elechart_updated.forEach(function (e) {
+            return _this2.off('elechart_updated', e.fn, e.ctx);
+          });
+        }
+
+        if (this._chart && this._chart._container) {
+          this._chart._container.selectAll('g.point .point').remove();
+
+          this._chart.clear();
+        }
+      },
+      _clearLayers: function _clearLayers() {
+        if (this._layers && this._layers.eachLayer) {
+          this._layers.eachLayer(function (l) {
+            return l.remove();
+          });
+
+          this._layers.clearLayers();
+        }
+      },
+      _clearMarkers: function _clearMarkers() {
+        if (this._markers && this._markers.eachLayer) {
+          this._markers.eachLayer(function (l) {
+            return l.remove();
+          });
+
+          this._markers.clearLayers();
+        }
       },
 
       /**
@@ -2165,20 +1904,6 @@
        */
       enableBrush: function enableBrush() {
         this._chart._brushEnabled = true;
-      },
-
-      /**
-       * Alias for enableBrush
-       */
-      enableDragging: function enableDragging() {
-        this.enableBrushing();
-      },
-
-      /**
-       * Alias for disableBrush
-       */
-      disableDragging: function disableDragging() {
-        this.disableBrushing();
       },
 
       /**
@@ -2215,7 +1940,7 @@
        * Get default zoom level when "followMarker" is true.
        */
       getZFollow: function getZFollow() {
-        return this._zFollow;
+        return this.options.zFollow;
       },
 
       /**
@@ -2231,148 +1956,77 @@
       initialize: function initialize(options) {
         this._data = [];
         this._layers = L.featureGroup();
+        this._markers = L.featureGroup();
         this._markedSegments = L.polyline([]);
         this._chartEnabled = true, this.track_info = {};
-        this.options = deepMerge({}, this.options, options);
-        this._zFollow = this.options.zFollow;
+        L.setOptions(this, options);
         if (this.options.followMarker) this._setMapView = L.Util.throttle(this._setMapView, 300, this);
-        if (this.options.placeholder) this.options.loadData.lazy = this.options.loadData.defer = true;
         if (this.options.legend) this.options.margins.bottom += 30;
         if (this.options.theme) this.options.polylineSegments.className += ' ' + this.options.theme;
+        if (this.options.wptIcons === true) this.options.wptIcons = Options.wptIcons;
+        if (this.options.distanceMarkers === true) this.options.distanceMarkers = {
+          lazy: true
+        };
 
-        this._markedSegments.setStyle(this.options.polylineSegments); // this._resizeChart   = _.debounce(this._resizeChart,   300, this);
-        // this._resizeChart = L.Util.throttle(this._resizeChart, 300, this);
-        // if (L.Browser.mobile) {
-        // 	this._updateChart   = _.debounce(this._updateChart,   300, this);
-        // 	this._updateSummary = _.debounce(this._updateSummary, 300, this);
-        // }
-        // Leaflet canvas renderer colors
+        this._markedSegments.setStyle(this.options.polylineSegments); // Leaflet canvas renderer colors
 
 
-        L.extend(Colors, this.options.colors || {});
+        L.extend(Colors, this.options.colors || {}); // Various stuff
+
+        this._fixCanvasPaths();
+
+        this._fixTooltipSize();
       },
 
       /**
-       * Alias for loadData
+       * Javascript scripts downloader (lazy loader)
        */
-      load: function load(data, opts) {
-        this.loadData(data, opts);
-      },
+      lazyLoad: function lazyLoad(src) {
+        var condition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+        var loader = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
 
-      /**
-       * Alias for addTo
-       */
-      loadChart: function loadChart(map) {
-        this.addTo(map);
+        if (!this.options.lazyLoadJS) {
+          return Promise.resolve();
+        }
+
+        switch (src) {
+          case this.__D3:
+            loader = '_d3LazyLoader';
+            condition = (typeof d3 === "undefined" ? "undefined" : _typeof(d3)) !== 'object';
+            break;
+
+          case this.__TOGEOJSON:
+            loader = '_togeojsonLazyLoader';
+            condition = (typeof toGeoJSON === "undefined" ? "undefined" : _typeof(toGeoJSON)) !== 'object';
+            break;
+
+          case this.__LGEOMUTIL:
+            loader = '_geomutilLazyLoader';
+            condition = _typeof(L.GeometryUtil) !== 'object';
+            break;
+
+          case this.__LALMOSTOVER:
+            loader = '_almostoverLazyLoader';
+            condition = typeof L.Handler.AlmostOver !== 'function';
+            break;
+
+          case this.__LDISTANCEM:
+            loader = '_distanceMarkersLazyLoader';
+            condition = typeof L.DistanceMarkers !== 'function';
+            break;
+        }
+
+        return L.Control.Elevation[loader] = lazyLoader(src, condition, L.Control.Elevation[loader]);
       },
 
       /**
        * Load elevation data (GPX, GeoJSON or KML).
        */
-      loadData: function loadData(data, opts) {
-        opts = L.extend({}, this.options.loadData, opts);
-
-        if (opts.defer) {
-          this.loadDefer(data, opts);
-        } else if (opts.lazy) {
-          this.loadLazy(data, opts);
-        } else if (isXMLDoc(data)) {
-          this.loadXML(data);
-        } else if (isJSONDoc(data)) {
-          this.loadGeoJSON(data);
-        } else {
-          this.loadFile(data);
-        }
-      },
-
-      /**
-       * Wait for document load before download data.
-       */
-      loadDefer: function loadDefer(data, opts) {
-        opts = L.extend({}, this.options.loadData, opts);
-        opts.defer = false;
-
-        deferFunc(L.bind(this.loadData, this, data, opts));
-      },
-
-      /**
-       * Load data from a remote url.
-       */
-      loadFile: function loadFile(url) {
-        var _this2 = this;
-
-        fetch(url).then(function (response) {
-          return response.text();
-        }).then(function (data) {
-          _this2._downloadURL = url; // TODO: handle multiple urls?
-
-          _this2.loadData(data, {
-            lazy: false,
-            defer: false
-          });
-        }).catch(function (err) {
-          return console.warn(err);
-        });
-      },
-
-      /**
-       * Load raw GeoJSON data.
-       */
-      loadGeoJSON: function loadGeoJSON(data) {
-        GeoJSONLoader(data, this);
-      },
-
-      /**
-       * Alias for loadXML
-       */
-      loadGPX: function loadGPX(data) {
-        this.loadXML(data);
-      },
-
-      /**
-       * Load raw XML data.
-       */
-      loadXML: function loadXML(data) {
+      load: function load(data) {
         var _this3 = this;
 
-        Elevation._togeojsonLazyLoader = lazyLoader(this.__TOGEOJSON, typeof toGeoJSON !== 'function' || !this.options.lazyLoadJS, Elevation._togeojsonLazyLoader).then(function () {
-          var xml = new DOMParser().parseFromString(data, "text/xml");
-          var type = xml.documentElement.tagName.toLowerCase(); // "kml" or "gpx"
-
-          if (!(type in toGeoJSON)) {
-            type = xml.documentElement.tagName == "TrainingCenterDatabase" ? 'tcx' : 'gpx';
-          }
-
-          var geojson = toGeoJSON[type](xml);
-          var name = xml.getElementsByTagName('name');
-
-          if (name[0]) {
-            geojson.name = name[0].innerHTML;
-          } else if (_this3._downloadURL) {
-            geojson.name = _this3._downloadURL.split('/').pop().split('#')[0].split('?')[0];
-          }
-
-          return _this3.loadGeoJSON(geojson, _this3);
-        });
-      },
-
-      /**
-       * Wait for chart container visible before download data.
-       */
-      loadLazy: function loadLazy(data, opts) {
-        var _this4 = this;
-
-        opts = L.extend({}, this.options.loadData, opts);
-        var elem = opts.lazy.parentNode ? opts.lazy : this.placeholder;
-
-        waitHolder(elem).then(function () {
-          opts.lazy = false;
-
-          _this4.loadData(data, opts);
-
-          _this4.once('eledata_loaded', function () {
-            return _this4.placeholder.parentNode.removeChild(elem);
-          });
+        this._parseFromString(data).then(function (geojson) {
+          return geojson ? _this3._loadLayer(geojson) : _this3._loadFile(data);
         });
       },
 
@@ -2381,47 +2035,36 @@
        * Called on control.addTo(map).
        */
       onAdd: function onAdd(map) {
-        var _this5 = this;
+        var _this4 = this;
 
         this._map = map;
 
-        var container = this._container = create("div", "elevation-control elevation " + this.options.theme);
+        var container = this._container = create("div", "elevation-control elevation " + this.options.theme + " " + (this.options.detached ? '' : 'leaflet-control'));
 
-        if (!this.options.detached) {
-          addClass(container, 'leaflet-control');
-        }
+        this.lazyLoad(this.__D3).then(function () {
+          _this4._initButton(container);
 
-        if (this.options.placeholder && !this._data.length) {
-          this.placeholder = create('img', 'elevation-placeholder', typeof this.options.placeholder === 'string' ? {
-            src: this.options.placeholder,
-            alt: ''
-          } : this.options.placeholder);
+          _this4._initChart(container);
 
-          insert(container, this.placeholder, 'afterbegin');
-        }
+          _this4._initSummary(container);
 
-        Elevation._d3LazyLoader = lazyLoader(this.__D3, (typeof d3 === "undefined" ? "undefined" : _typeof(d3)) !== 'object' || !this.options.lazyLoadJS, Elevation._d3LazyLoader).then(function () {
-          _this5._initButton(container);
+          _this4._initMarker(map);
 
-          _this5._initChart(container);
+          _this4._initLayer(map);
 
-          _this5._initSummary(container);
+          map.on('zoom viewreset zoomanim', _this4._hideMarker, _this4).on('resize', _this4._resetView, _this4).on('resize', _this4._resizeChart, _this4).on('rotate', _this4._rotateMarker, _this4).on('mousedown', _this4._resetDrag, _this4);
 
-          _this5._initMarker(map);
+          on(map.getContainer(), 'mousewheel', _this4._resetDrag, _this4);
 
-          _this5._initLayer(map);
+          on(map.getContainer(), 'touchstart', _this4._resetDrag, _this4);
 
-          map.on('zoom viewreset zoomanim', _this5._hideMarker, _this5).on('resize', _this5._resetView, _this5).on('resize', _this5._resizeChart, _this5).on('rotate', _this5._rotateMarker, _this5).on('mousedown', _this5._resetDrag, _this5);
+          on(document, 'keydown', _this4._keydownHandler, _this4);
 
-          on(map.getContainer(), 'mousewheel', _this5._resetDrag, _this5);
+          _this4.on('eledata_added eledata_loaded', _this4._updateChart, _this4).on('eledata_added eledata_loaded', _this4._updateSummary, _this4);
 
-          on(map.getContainer(), 'touchstart', _this5._resetDrag, _this5);
+          _this4._updateChart();
 
-          _this5.on('eledata_added eledata_loaded', _this5._updateChart, _this5).on('eledata_added eledata_loaded', _this5._updateSummary, _this5);
-
-          _this5._updateChart();
-
-          _this5._updateSummary();
+          _this4._updateSummary();
         });
         return container;
       },
@@ -2438,6 +2081,8 @@
 
         off(map.getContainer(), 'touchstart', this._resetDrag, this);
 
+        off(document, 'keydown', this._keydownHandler, this);
+
         this.off('eledata_added eledata_loaded', this._updateChart, this).off('eledata_added eledata_loaded', this._updateSummary, this);
       },
 
@@ -2452,7 +2097,7 @@
        * Set default zoom level when "followMarker" is true.
        */
       setZFollow: function setZFollow(zoom) {
-        this._zFollow = zoom;
+        this.options.zFollow = zoom;
       },
 
       /**
@@ -2466,11 +2111,15 @@
        * Parsing data either from GPX or GeoJSON and update the diagram data
        */
       _addData: function _addData(d) {
-        var _this6 = this;
+        var _this5 = this;
 
         if (!d) {
           return;
         }
+        /**
+         * Standard GeoJSON --> doesn't handle "time", "heart", …
+         */
+
 
         var geom = d.geometry;
 
@@ -2483,7 +2132,7 @@
 
             case 'MultiLineString':
               each(geom.coordinates, function (coords) {
-                return _this6._addGeoJSONData(coords);
+                return _this5._addGeoJSONData(coords);
               });
 
               break;
@@ -2495,48 +2144,51 @@
 
         if (d.type === "FeatureCollection") {
           each(d.features, function (feature) {
-            return _this6._addData(feature);
+            return _this5._addData(feature);
           });
         }
+        /**
+         * Extended GeoJSON --> rely on leaflet implementation
+         */
+
 
         if (d._latlngs) {
-          this._addGPXData(d._latlngs);
+          this._addGeoJSONData(d._latlngs, d.feature && d.feature.properties);
         }
       },
 
       /*
        * Parsing of GeoJSON data lines and their elevation in z-coordinate
        */
-      _addGeoJSONData: function _addGeoJSONData(coords) {
-        var _this7 = this;
+      _addGeoJSONData: function _addGeoJSONData(coords, properties) {
+        var _this6 = this;
 
-        each(coords, function (point) {
-          _this7._addPoint(point[1], point[0], point[2]);
+        coords.forEach(function (point, i) {
+          var _point$meta, _point$lat, _point$lng, _ref, _point$alt;
 
-          _this7._fireEvt("elepoint_added", {
+          // Inspired by L.GPX layer properties
+          point.meta = (_point$meta = point.meta) !== null && _point$meta !== void 0 ? _point$meta : {
+            time: null,
+            ele: null,
+            hr: null,
+            cad: null,
+            atemp: null
+          }; // "alt" property is generated inside "leaflet"
+
+          if ("alt" in point) point.meta.ele = point.alt; // "coordinateProperties" property is generated inside "@tmcw/toGeoJSON"
+
+          var props = properties && properties.coordinateProperties || properties;
+
+          if (props) {
+            if ("coordTimes" in props) point.meta.time = new Date(Date.parse(props.coordTimes[i]));else if ("times" in props) point.meta.time = new Date(Date.parse(props.times[i]));else if ("time" in props) point.meta.time = new Date(Date.parse(_typeof(props.time) === 'object' ? props.time[i] : props.time));
+            if ("heartRates" in props) point.meta.hr = parseInt(props.heartRates[i]);else if ("heartRate" in props) point.meta.hr = parseInt(_typeof(props.heartRate) === 'object' ? props.heartRate[i] : props.heartRate);else if ("heart" in props) point.meta.hr = parseInt(_typeof(props.heart) === 'object' ? props.heart[i] : props.heart); // TODO: ask to "@tmcw/toGeoJSON" for "cadence" and "temperature" implementation
+          }
+
+          _this6._addPoint((_point$lat = point.lat) !== null && _point$lat !== void 0 ? _point$lat : point[1], (_point$lng = point.lng) !== null && _point$lng !== void 0 ? _point$lng : point[0], (_ref = (_point$alt = point.alt) !== null && _point$alt !== void 0 ? _point$alt : point.meta.ele) !== null && _ref !== void 0 ? _ref : point[2]);
+
+          _this6._fireEvt("elepoint_added", {
             point: point,
-            index: _this7._data.length - 1
-          });
-        });
-
-        this._fireEvt("eletrack_added", {
-          coords: coords,
-          index: this._data.length - 1
-        });
-      },
-
-      /*
-       * Parsing function for GPX data and their elevation in z-coordinate
-       */
-      _addGPXData: function _addGPXData(coords) {
-        var _this8 = this;
-
-        each(coords, function (point) {
-          _this8._addPoint(point.lat, point.lng, point.meta.ele);
-
-          _this8._fireEvt("elepoint_added", {
-            point: point,
-            index: _this8._data.length - 1
+            index: _this6._data.length - 1
           });
         });
 
@@ -2551,9 +2203,9 @@
        */
       _addPoint: function _addPoint(x, y, z) {
         if (this.options.reverseCoords) {
-          var _ref = [y, x];
-          x = _ref[0];
-          y = _ref[1];
+          var _ref2 = [y, x];
+          x = _ref2[0];
+          y = _ref2[1];
         }
 
         this._data.push({
@@ -2568,7 +2220,58 @@
         });
       },
       _addLayer: function _addLayer(layer) {
-        if (layer) this._layers.addLayer(layer);
+        if (layer) this._layers.addLayer(layer); // Postpone adding the distance markers (lazy: true)
+
+        if (layer && this.options.distanceMarkers && this.options.distanceMarkers.lazy) {
+          layer.on('add remove', function (e) {
+            return L.DistanceMarkers && e.target instanceof L.Polyline && e.target[e.type + 'DistanceMarkers']();
+          });
+        }
+      },
+      _addMarker: function _addMarker(marker) {
+        if (marker) this._markers.addLayer(marker);
+      },
+
+      /**
+       * Initialize "L.AlmostOver" integration
+       */
+      _initAlmostOverHandler: function _initAlmostOverHandler(map, layer) {
+        var _this7 = this;
+
+        if (!map || !this.options.almostOver) return;
+        this.lazyLoad(this.__LGEOMUTIL).then(function () {
+          return _this7.lazyLoad(_this7.__LALMOSTOVER);
+        }).then(function () {
+          map.addHandler('almostOver', L.Handler.AlmostOver);
+
+          if (L.GeometryUtil && map.almostOver && map.almostOver.enabled()) {
+            map.almostOver.addLayer(layer);
+            map.on('almost:move', function (e) {
+              return _this7._mousemoveLayerHandler(e);
+            }).on('almost:out', function (e) {
+              return _this7._mouseoutHandler(e);
+            });
+          }
+        });
+      },
+
+      /**
+       * Initialize "L.DistanceMarkers" integration
+       */
+      _initDistanceMarkers: function _initDistanceMarkers(map, layer) {
+        var _this8 = this;
+
+        if (!map) return;
+
+        if (this.options.distanceMarkers) {
+          this.lazyLoad(this.__LGEOMUTIL).then(function () {
+            return _this8.lazyLoad(_this8.__LDISTANCEM);
+          }).then(function () {
+            return _this8.options.polyline && layer.addTo(map);
+          });
+        } else if (this.options.polyline) {
+          layer.addTo(map);
+        }
       },
 
       /**
@@ -2588,8 +2291,30 @@
           replaceClass(eleDiv, 'leaflet-control', 'elevation-detached');
         }
 
-        this.eleDiv = eleDiv;
-        return this.eleDiv;
+        return this.eleDiv = eleDiv;
+      },
+
+      /**
+       * Initialize "L.AlmostOver" and "L.DistanceMarkers"
+       */
+      _initMapIntegrations: function _initMapIntegrations(control, layer) {
+        var map = control._map;
+
+        if (control._map) {
+          map.once('layeradd', function (e) {
+            return control.options.autofitBounds && control.fitBounds(layer.getBounds());
+          });
+
+          if (!L.Browser.mobile) {
+            control._initAlmostOverHandler(map, layer);
+
+            control._initDistanceMarkers(map, layer);
+          } else if (control.options.polyline) {
+            layer.addTo(map);
+          }
+        } else {
+          console.warn("Undefined elevation map object");
+        }
       },
 
       /*
@@ -2604,6 +2329,58 @@
        */
       _expand: function _expand() {
         replaceClass(this._container, 'elevation-collapsed', 'elevation-expanded');
+      },
+
+      /**
+       * Add some basic colors to leaflet canvas renderer (preferCanvas: true).
+       */
+      _fixCanvasPaths: function _fixCanvasPaths() {
+        var oldProto = L.Canvas.prototype._fillStroke;
+        var control = this;
+        L.Canvas.include({
+          _fillStroke: function _fillStroke(ctx, layer) {
+            if (control._layers.hasLayer(layer)) {
+              var theme = control.options.theme.replace('-theme', '');
+              var color = Colors[theme] || {};
+              var options = layer.options;
+              options.color = color.line || color.area || theme;
+              options.stroke = !!options.color;
+              oldProto.call(this, ctx, layer);
+
+              if (options.stroke && options.weight !== 0) {
+                var oldVal = ctx.globalCompositeOperation || 'source-over';
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.strokeStyle = color.outline || '#FFF';
+                ctx.lineWidth = options.weight * 1.75;
+                ctx.stroke();
+                ctx.globalCompositeOperation = oldVal;
+              }
+            } else {
+              oldProto.call(this, ctx, layer);
+            }
+          }
+        });
+      },
+
+      /**
+       * Partial fix for initial tooltip size
+       *
+       * @link https://github.com/Raruto/leaflet-elevation/issues/81#issuecomment-713477050
+       */
+      _fixTooltipSize: function _fixTooltipSize() {
+        var _this9 = this;
+
+        this.on('elechart_init', function () {
+          return _this9.once('elechart_change elechart_hover', function (e) {
+            if (_this9._chartEnabled) {
+              _this9._chart._showDiagramIndicator(e.data, e.xCoord);
+
+              _this9._chart._showDiagramIndicator(e.data, e.xCoord);
+            }
+
+            _this9._updateMarker(e.data);
+          });
+        });
       },
 
       /*
@@ -2654,21 +2431,19 @@
         opts.xTicks = this._xTicks();
         opts.yTicks = this._yTicks();
 
-        if (opts.responsive) {
-          if (opts.detached) {
-            var _this$eleDiv = this.eleDiv,
-                offsetWidth = _this$eleDiv.offsetWidth,
-                offsetHeight = _this$eleDiv.offsetHeight;
-            if (offsetWidth > 0) opts.width = offsetWidth;
-            if (offsetHeight > 20) opts.height = offsetHeight - 20; // 20 = horizontal scrollbar size.
-          } else {
-            var _this$_map$getContain = this._map.getContainer(),
-                clientWidth = _this$_map$getContain.clientWidth;
+        if (opts.detached) {
+          var _this$eleDiv = this.eleDiv,
+              offsetWidth = _this$eleDiv.offsetWidth,
+              offsetHeight = _this$eleDiv.offsetHeight;
+          if (offsetWidth > 0) opts.width = offsetWidth;
+          if (offsetHeight > 20) opts.height = offsetHeight - 20; // 20 = horizontal scrollbar size.
+        } else {
+          var _this$_map$getContain = this._map.getContainer(),
+              clientWidth = _this$_map$getContain.clientWidth;
 
-            opts._maxWidth = opts._maxWidth > opts.width ? opts._maxWidth : opts.width;
-            this._container.style.maxWidth = opts._maxWidth + 'px';
-            if (opts._maxWidth > clientWidth) opts.width = clientWidth - 30;
-          }
+          opts._maxWidth = opts._maxWidth > opts.width ? opts._maxWidth : opts.width;
+          this._container.style.maxWidth = opts._maxWidth + 'px';
+          if (opts._maxWidth > clientWidth) opts.width = clientWidth - 30;
         }
 
         var chart = this._chart = new Chart$1(opts, this);
@@ -2684,17 +2459,17 @@
         this._fireEvt("elechart_init");
       },
       _initLayer: function _initLayer() {
-        var _this9 = this;
+        var _this10 = this;
 
         this._layers.on('layeradd layerremove', function (e) {
           var layer = e.layer;
           var node = layer.getElement && layer.getElement();
 
-          toggleClass(node, _this9.options.polyline.className + ' ' + _this9.options.theme, e.type == 'layeradd');
+          toggleClass(node, _this10.options.polyline.className + ' ' + _this10.options.theme, e.type == 'layeradd');
 
-          toggleEvent(layer, "mousemove", _this9._mousemoveLayerHandler.bind(_this9), e.type == 'layeradd');
+          toggleEvent(layer, "mousemove", _this10._mousemoveLayerHandler.bind(_this10), e.type == 'layeradd');
 
-          toggleEvent(layer, "mouseout", _this9._mouseoutHandler.bind(_this9), e.type == 'layeradd');
+          toggleEvent(layer, "mouseout", _this10._mouseoutHandler.bind(_this10), e.type == 'layeradd');
         });
       },
       _initMarker: function _initMarker(map) {
@@ -2721,18 +2496,9 @@
        * Inspired by L.Control.Layers
        */
       _initButton: function _initButton(container) {
-        //Makes this work on IE10 Touch devices by stopping it from firing a mouseout event when the touch is released
-        container.setAttribute('aria-haspopup', true);
-
-        if (!this.options.detached) {
-          L.DomEvent.disableClickPropagation(container); //.disableScrollPropagation(container);
+        if (L.Browser.mobile || !this.options.detached) {
+          L.DomEvent.disableClickPropagation(container).disableScrollPropagation(container);
         }
-
-        if (L.Browser.mobile) {
-          on(container, 'click', L.DomEvent.stopPropagation);
-        }
-
-        on(container, 'mousewheel', this._mousewheelHandler, this);
 
         if (!this.options.detached) {
           var link = this._button = create('a', "elevation-toggle elevation-toggle-icon" + (this.options.autohide ? "" : " close-button"), {
@@ -2755,17 +2521,133 @@
 
             on(link, 'focus', this._toggle, this);
 
-            this._map.on('click', this._collapse, this); // TODO: keyboard accessibility
-
+            this._map.on('click', this._collapse, this);
           }
         }
       },
       _initSummary: function _initSummary(container) {
-        var summary = this._summary = new Summary({
+        this._summary = new Summary({
           summary: this.options.summary
         }, this);
-        d3.select(container).call(summary.render());
-        this.summaryDiv = this._summary._container;
+        d3.select(container).call(this._summary.render());
+      },
+      _keydownHandler: function _keydownHandler(e) {
+        if (!this.options.detached && e.key === "Escape") {
+          this._collapse();
+        }
+      },
+
+      /**
+       * Retrieve data from a remote url (HTTP).
+       */
+      _loadFile: function _loadFile(url) {
+        var _this11 = this;
+
+        fetch(url).then(function (response) {
+          return response.text();
+        }).then(function (data) {
+          _this11._downloadURL = url; // TODO: handle multiple urls?
+
+          _this11._parseFromString(data).then(function (geojson) {
+            return geojson && _this11._loadLayer(geojson);
+          });
+        }).catch(function (err) {
+          return console.warn(err);
+        });
+      },
+
+      /**
+       * Simple GeoJSON data loader (L.GeoJSON).
+       */
+      _loadLayer: function _loadLayer(geojson) {
+        var control = this;
+        var _control$options = control.options,
+            wptIcons = _control$options.wptIcons,
+            wptLabels = _control$options.wptLabels;
+        var layer = L.geoJson(geojson, {
+          distanceMarkers: control.options.distanceMarkers,
+          style: function style(feature) {
+            var style = L.extend({}, control.options.polyline);
+
+            if (control.options.theme) {
+              style.className += ' ' + control.options.theme;
+            }
+
+            return style;
+          },
+          pointToLayer: function pointToLayer(feature, latlng) {
+            var _prop$desc, _prop$name, _prop$sym;
+
+            if (!control.options.waypoints) return;
+            var prop = feature.properties;
+            var desc = (_prop$desc = prop.desc) !== null && _prop$desc !== void 0 ? _prop$desc : '';
+            var name = (_prop$name = prop.name) !== null && _prop$name !== void 0 ? _prop$name : '';
+            var sym = ((_prop$sym = prop.sym) !== null && _prop$sym !== void 0 ? _prop$sym : name).replace(' ', '-').replace('"', '').replace("'", '').toLowerCase(); // Handle chart waypoints (dots)
+
+            if ([true, 'dots'].includes(control.options.waypoints)) {
+              control._registerCheckPoint({
+                latlng: latlng,
+                label: [true, 'dots'].includes(wptLabels) ? name : ''
+              });
+            } // Handle map waypoints (markers)
+
+
+            if ([true, 'markers'].includes(control.options.waypoints) && wptIcons != false) {
+              // generate and cache appropriate icon symbol
+              if (!wptIcons.hasOwnProperty(sym)) {
+                wptIcons[sym] = L.divIcon(L.extend({}, wptIcons[""].options, {
+                  html: '<i class="elevation-waypoint-icon ' + sym + '"></i>'
+                }));
+              }
+
+              var marker = L.marker(latlng, {
+                icon: wptIcons[sym]
+              });
+
+              if ([true, 'markers'].includes(wptLabels) && (name || desc)) {
+                var content = decodeURI("<b>" + name + "</b>" + (desc.length > 0 ? '<br>' + desc : ''));
+                marker.bindPopup(content, {
+                  className: 'elevation-popup',
+                  keepInView: true
+                }).openPopup();
+                marker.bindTooltip(content, {
+                  className: 'elevation-tooltip',
+                  direction: 'auto',
+                  sticky: true,
+                  opacity: 1
+                }).openTooltip();
+              }
+
+              control._addMarker(marker);
+
+              control.fire('waypoint_added', {
+                point: marker,
+                element: latlng,
+                properties: prop
+              });
+              return marker;
+            }
+          },
+          onEachFeature: function onEachFeature(feature, layer) {
+            if (feature.geometry && feature.geometry.type != 'Point') {
+              control.addData(layer);
+              control.track_info = L.extend({}, control.track_info, {
+                name: geojson.name
+              });
+            }
+          }
+        });
+        control.lazyLoad(control.__D3).then(function () {
+          control._initMapIntegrations(control, layer);
+
+          control._fireEvt("eledata_loaded", {
+            data: geojson,
+            layer: layer,
+            name: control.track_info.name,
+            track_info: control.track_info
+          });
+        });
+        return layer;
       },
       _dragendHandler: function _dragendHandler(e) {
         this._hideMarker();
@@ -2849,29 +2731,116 @@
         this._fireEvt("elechart_leave");
       },
 
-      /*
-       * Handles the mouesewheel over the chart.
+      /**
+       * Simple GeoJSON Parser
        */
-      _mousewheelHandler: function _mousewheelHandler(e) {
-        if (this._map.gestureHandling && this._map.gestureHandling._enabled) return;
-
-        var ll = this._marker.getLatLng() || this._map.getCenter();
-
-        var z = this._map.getZoom() + Math.sign(e.deltaY);
-
-        this._resetDrag();
-
-        this._map.flyTo(ll, z);
+      _parseFromGeoJSONString: function _parseFromGeoJSONString(data) {
+        try {
+          return JSON.parse(data);
+        } catch (e) {}
       },
 
       /**
-       * Add a waypoint marker to the diagram
+       * Attempt to parse raw response data (GeoJSON or XML > GeoJSON)
+       */
+      _parseFromString: function _parseFromString(data) {
+        var _this12 = this;
+
+        return new Promise(function (resolve) {
+          return _this12.lazyLoad(_this12.__TOGEOJSON).then(function () {
+            var geojson;
+
+            try {
+              geojson = _this12._parseFromXMLString(data.trim());
+            } catch (e) {
+              geojson = _this12._parseFromGeoJSONString(data.toString());
+            }
+
+            if (geojson) {
+              geojson = _this12._prepareMultiLineStrings(geojson);
+              geojson = _this12._prepareAdditionalProperties(geojson);
+            }
+
+            resolve(geojson);
+          });
+        });
+      },
+
+      /**
+       * Simple XML Parser (GPX, KML, TCX)
+       */
+      _parseFromXMLString: function _parseFromXMLString(data) {
+        var _Array$from$find;
+
+        if (data.indexOf("<") != 0) {
+          throw 'Invalid XML';
+        }
+
+        var xml = new DOMParser().parseFromString(data, "text/xml");
+        var type = xml.documentElement.tagName.toLowerCase(); // "kml" or "gpx"
+
+        var name = xml.getElementsByTagName('name');
+
+        if (xml.getElementsByTagName('parsererror').length) {
+          throw 'Invalid XML';
+        }
+
+        if (!(type in toGeoJSON)) {
+          type = xml.documentElement.tagName == "TrainingCenterDatabase" ? 'tcx' : 'gpx';
+        }
+
+        var geojson = toGeoJSON[type](xml);
+        geojson.name = name.length > 0 ? ((_Array$from$find = Array.from(name).find(function (tag) {
+          return tag.parentElement.tagName == "trk";
+        })) !== null && _Array$from$find !== void 0 ? _Array$from$find : name[0]).textContent : '';
+        return geojson;
+      },
+
+      /**
+       * Extend GeoJSON properties (name, time, ...)
+       */
+      _prepareAdditionalProperties: function _prepareAdditionalProperties(geojson) {
+        if (!geojson.name && this._downloadURL) {
+          geojson.name = this._downloadURL.split('/').pop().split('#')[0].split('?')[0];
+        }
+
+        return geojson;
+      },
+
+      /**
+       * Just a temporary fix for MultiLineString data (trk > trkseg + trkseg),
+       * just split them into seperate LineStrings (trk > trkseg, trk > trkseg)
+       *
+       * @link https://github.com/Raruto/leaflet-elevation/issues/56
+       */
+      _prepareMultiLineStrings: function _prepareMultiLineStrings(geojson) {
+        geojson.features.forEach(function (feauture) {
+          if (feauture.geometry.type == "MultiLineString") {
+            feauture.geometry.coordinates.forEach(function (coords) {
+              geojson.features.push({
+                geometry: {
+                  type: 'LineString',
+                  coordinates: coords
+                },
+                properties: feauture.properties,
+                type: 'Feature'
+              });
+            });
+          }
+        });
+        return geojson.features.filter(function (feauture) {
+          return feauture.geometry.type != "MultiLineString";
+        });
+      },
+
+      /**
+       * Add a point of interest over the diagram
        */
       _registerCheckPoint: function _registerCheckPoint(props) {
-        var _this10 = this;
+        var _this13 = this;
 
         this.on("elechart_updated", function () {
-          return _this10._chart._registerCheckPoint(props);
+          return _this13._chart._registerCheckPoint(props);
         });
       },
 
@@ -2879,10 +2848,10 @@
        * Add chart profile to diagram
        */
       _registerAreaPath: function _registerAreaPath(props) {
-        var _this11 = this;
+        var _this14 = this;
 
         this.on("elechart_init", function () {
-          return _this11._chart._registerAreaPath(props);
+          return _this14._chart._registerAreaPath(props);
         });
       },
 
@@ -2890,10 +2859,10 @@
        * Add chart grid to diagram
        */
       _registerAxisGrid: function _registerAxisGrid(props) {
-        var _this12 = this;
+        var _this15 = this;
 
         this.on("elechart_axis", function () {
-          return _this12._chart._registerAxisGrid(props);
+          return _this15._chart._registerAxisGrid(props);
         });
       },
 
@@ -2901,25 +2870,25 @@
        * Add chart axis to diagram
        */
       _registerAxisScale: function _registerAxisScale(props) {
-        var _this13 = this;
+        var _this16 = this;
 
         this.on("elechart_axis", function () {
-          return _this13._chart._registerAxisScale(props);
+          return _this16._chart._registerAxisScale(props);
         });
       },
 
       /**
        * Add chart or marker tooltip info
        */
-      _registerFocusLabel: function _registerFocusLabel(props) {
-        var _this14 = this;
+      _registerTooltip: function _registerTooltip(props) {
+        var _this17 = this;
 
         if (props.chart) {
           var label = L.extend({}, props, {
             value: props.chart
           });
           this.on("elechart_init", function () {
-            return _this14._chart._registerFocusLabel(label);
+            return _this17._chart._registerTooltip(label);
           });
         }
 
@@ -2929,7 +2898,7 @@
           });
 
           this.on("elechart_marker", function () {
-            return _this14._marker._registerFocusLabel(_label);
+            return _this17._marker._registerTooltip(_label);
           });
         }
       },
@@ -2938,10 +2907,10 @@
        * Add summary info to diagram
        */
       _registerSummary: function _registerSummary(props) {
-        var _this15 = this;
+        var _this18 = this;
 
         this.on('elechart_summary', function () {
-          return _this15._summary._registerSummary(props);
+          return _this18._summary._registerSummary(props);
         });
       },
 
@@ -2973,34 +2942,32 @@
        * Hacky way for handling chart resize. Deletes it and redraw chart.
        */
       _resizeChart: function _resizeChart() {
-        // prevent displaying chart on resize if hidden
+        if (!this._container) return; // prevent displaying chart on resize if hidden
+
         if (style(this._container, "display") == "none") return;
         var opts = this.options;
+        var newWidth;
 
-        if (opts.responsive) {
-          var newWidth;
+        if (opts.detached) {
+          newWidth = (this.eleDiv || this._container).offsetWidth;
+        } else {
+          var _this$_map$getContain2 = this._map.getContainer(),
+              clientWidth = _this$_map$getContain2.clientWidth;
 
-          if (opts.detached) {
-            newWidth = (this.eleDiv || this._container).offsetWidth;
-          } else {
-            var _this$_map$getContain2 = this._map.getContainer(),
-                clientWidth = _this$_map$getContain2.clientWidth;
+          newWidth = opts._maxWidth > clientWidth ? clientWidth - 30 : opts._maxWidth;
+        }
 
-            newWidth = opts._maxWidth > clientWidth ? clientWidth - 30 : opts._maxWidth;
-          }
+        if (newWidth) {
+          var chart = this._chart;
+          opts.width = newWidth;
 
-          if (newWidth) {
-            var chart = this._chart;
-            opts.width = newWidth;
+          if (chart && chart._chart) {
+            chart._chart._resize(opts);
 
-            if (chart && chart._chart) {
-              chart._chart._resize(opts);
+            opts.xTicks = this._xTicks();
+            opts.yTicks = this._yTicks();
 
-              opts.xTicks = this._xTicks();
-              opts.yTicks = this._yTicks();
-
-              this._updateChart();
-            }
+            this._updateChart();
           }
         }
 
@@ -3029,10 +2996,10 @@
 
         var zoom = this._map.getZoom();
 
-        if ("number" === typeof this._zFollow) {
-          if (zoom < this._zFollow) zoom = this._zFollow;
+        var z = this.options.zFollow;
 
-          this._map.setView(item.latlng, zoom, {
+        if (typeof z === "number") {
+          this._map.setView(item.latlng, zoom < z ? z : zoom, {
             animate: true,
             duration: 0.25
           });
@@ -3048,17 +3015,14 @@
        * Toggle chart data on legend click
        */
       _toggleChartHandler: function _toggleChartHandler(e) {
-        var _this16 = this;
+        var _this19 = this;
 
-        var path = e.path,
-            name = e.name,
+        var name = e.name,
             enabled = e.enabled;
         this._chartEnabled = this._chart._hasActiveLayers(); // toggle layer visibility on empty chart
 
         this._layers.eachLayer(function (layer) {
-          var node = layer.getElement && layer.getElement();
-
-          toggleClass(node, _this16.options.polyline.className + ' ' + _this16.options.theme, _this16._chartEnabled);
+          return toggleClass(layer.getElement && layer.getElement(), _this19.options.polyline.className + ' ' + _this19.options.theme, _this19._chartEnabled);
         }); // toggle option value (eg. altitude = { 'disabled' || 'disabled' })
 
 
@@ -3075,7 +3039,9 @@
        * Calculates [x, y] domain and then update chart.
        */
       _updateChart: function _updateChart() {
-        if (!this._data.length || !this._container) return;
+        if (
+        /*!this._data.length ||*/
+        !this._chart || !this._container) return;
 
         this._fireEvt("elechart_axis");
 
@@ -3096,23 +3062,23 @@
        * Update the position/height indicator marker drawn onto the map
        */
       _updateMarker: function _updateMarker(item) {
-        if (!this._marker) return;
-
-        this._marker.update({
-          map: this._map,
-          item: item,
-          maxElevation: this.track_info.elevation_max || 0,
-          options: this.options
-        });
+        if (this._marker) {
+          this._marker.update({
+            map: this._map,
+            item: item,
+            maxElevation: this.track_info.elevation_max || 0,
+            options: this.options
+          });
+        }
       },
 
       /**
        * Fix marker rotation on rotated maps
        */
       _rotateMarker: function _rotateMarker() {
-        if (!this._marker) return;
-
-        this._marker.update();
+        if (this._marker) {
+          this._marker.update();
+        }
       },
 
       /**
@@ -3130,7 +3096,7 @@
        * Update chart summary.
        */
       _updateSummary: function _updateSummary() {
-        var _this17 = this;
+        var _this20 = this;
 
         this._summary.reset();
 
@@ -3140,15 +3106,24 @@
 
         if (this.options.downloadLink && this._downloadURL) {
           // TODO: generate dynamically file content instead of using static file urls.
-          this.summaryDiv.innerHTML += '<span class="download"><a href="#">' + L._('Download') + '</a></span>';
+          this._summary._container.innerHTML += '<span class="download"><a href="#">' + L._('Download') + '</a></span>';
 
-          select('.download a', this.summaryDiv).onclick = function (e) {
+          select('.download a', this._summary._container).onclick = function (e) {
             e.preventDefault();
+            var event = {
+              downloadLink: _this20.options.downloadLink,
+              confirm: saveFile.bind(_this20, _this20._downloadURL)
+            };
 
-            _this17._fireEvt('eletrack_download', {
-              downloadLink: _this17.options.downloadLink,
-              confirm: saveFile.bind(_this17, _this17._downloadURL)
-            });
+            if (_this20.options.downloadLink == 'modal' && typeof CustomEvent === "function") {
+              document.dispatchEvent(new CustomEvent("eletrack_download", {
+                detail: event
+              }));
+            } else if (_this20.options.downloadLink == 'link' || _this20.options.downloadLink === true) {
+              event.confirm();
+            }
+
+            _this20._fireEvt('eletrack_download', event);
           };
         }
       },
@@ -3178,214 +3153,26 @@
         return this.__yTicks || Math.round(this._height() / 30);
       }
     });
-    /**
-     * Attach here some useful elevation hooks.
-     */
 
     Elevation.addInitHook(function () {
-      this.on('waypoint_added', function (e) {
-        var p = e.point,
-            pop = p._popup;
-
-        if (pop) {
-          pop.options.className = 'elevation-popup';
-        }
-
-        if (pop && pop._content) {
-          pop._content = decodeURI(pop._content);
-          p.bindTooltip(pop._content, {
-            direction: 'auto',
-            sticky: true,
-            opacity: 1,
-            className: 'elevation-tooltip'
-          }).openTooltip();
-        }
-      });
-      this.on("eletrack_download", function (e) {
-        if (e.downloadLink == 'modal' && typeof CustomEvent === "function") {
-          document.dispatchEvent(new CustomEvent("eletrack_download", {
-            detail: e
-          }));
-        } else if (e.downloadLink == 'link' || e.downloadLink === true) {
-          e.confirm();
-        }
-      });
-      this.on('eledata_loaded', function (e) {
-        var _this18 = this;
-
-        var map = this._map;
-        var layer = e.layer;
-
-        if (!map) {
-          console.warn("Undefined elevation map object");
-          return;
-        }
-
-        map.once('layeradd', function (e) {
-          return _this18.options.autofitBounds && _this18.fitBounds(layer.getBounds());
-        });
-
-        if (L.Browser.mobile) {
-          if (this.options.polyline) layer.addTo(map);
-        } else {
-          // leaflet-geometryutil
-          Elevation._geomutilLazyLoader = lazyLoader(this.__LGEOMUTIL, typeof L.GeometryUtil !== 'function' || !this.options.lazyLoadJS, Elevation._geomutilLazyLoader).then(function () {
-            // leaflet-almostover
-            if (_this18.options.almostOver) {
-              Elevation._almostoverLazyLoader = lazyLoader(_this18.__LALMOSTOVER, typeof L.Handler.AlmostOver !== 'function' || !_this18.options.lazyLoadJS, Elevation._almostoverLazyLoader).then(function () {
-                map.addHandler('almostOver', L.Handler.AlmostOver);
-
-                if (L.GeometryUtil && map.almostOver && map.almostOver.enabled()) {
-                  map.almostOver.addLayer(layer);
-                  map.on('almost:move', function (e) {
-                    return _this18._mousemoveLayerHandler(e);
-                  }).on('almost:out', function (e) {
-                    return _this18._mouseoutHandler(e);
-                  });
-                }
-              });
-            } // leaflet-distance-markers
-
-
-            if (_this18.options.distanceMarkers) {
-              Elevation._distanceMarkersLazyLoader = lazyLoader(_this18.__LDISTANCEM, typeof L.DistanceMarkers !== 'function' || !_this18.options.lazyLoadJS, Elevation._distanceMarkersLazyLoader).then(function () {
-                return _this18.options.polyline && layer.addTo(map);
-              });
-            } else {
-              if (_this18.options.polyline) layer.addTo(map);
-            }
-          });
-        }
-      }); // Basic canvas renderer support.
-
-      var oldProto = L.Canvas.prototype._fillStroke;
-      var control = this;
-      L.Canvas.include({
-        _fillStroke: function _fillStroke(ctx, layer) {
-          if (control._layers.hasLayer(layer)) {
-            var theme = control.options.theme.replace('-theme', '');
-            var color = Colors[theme] || {};
-            var options = layer.options;
-            options.color = color.line || color.area || theme;
-            options.stroke = !!options.color;
-            oldProto.call(this, ctx, layer);
-
-            if (options.stroke && options.weight !== 0) {
-              var oldVal = ctx.globalCompositeOperation || 'source-over';
-              ctx.globalCompositeOperation = 'destination-over';
-              ctx.strokeStyle = '#FFF';
-              ctx.lineWidth = options.weight * 1.75;
-              ctx.stroke();
-              ctx.globalCompositeOperation = oldVal;
-            }
-          } else {
-            oldProto.call(this, ctx, layer);
-          }
-        }
-      }); // Partially fix: https://github.com/Raruto/leaflet-elevation/issues/81#issuecomment-713477050
-
-      this.on('elechart_init', function () {
-        this.once('elechart_change elechart_hover', function (e) {
-          if (this._chartEnabled) {
-            this._chart._showDiagramIndicator(e.data, e.xCoord);
-
-            this._chart._showDiagramIndicator(e.data, e.xCoord);
-          }
-
-          this._updateMarker(e.data);
-        });
-      });
-    });
-
-    Elevation.addInitHook(function () {
-      var _this2 = this;
-
-      var opts = this.options;
-      var distance = {};
-
-      if (this.options.imperial) {
-        this._distanceFactor = this.__mileFactor;
-        this._xLabel = "mi";
-      } else {
-        this._distanceFactor = opts.distanceFactor;
-        this._xLabel = opts.xLabel;
-      }
-
-      this.on("eledata_updated", function (e) {
-        var data = this._data;
-        var i = e.index;
-        var track = this.track_info;
-        var dist = track.distance || 0;
-        var curr = data[i].latlng;
-        var prev = i > 0 ? data[i - 1].latlng : curr;
-
-        var delta = curr.distanceTo(prev) * this._distanceFactor;
-
-        dist += Math.round(delta / 1000 * 100000) / 100000; // handles floating points calc
-
-        data[i].dist = dist;
-        track.distance = dist;
-      });
-      this.on("elechart_axis", function () {
-        this._chart._registerAxisGrid({
-          axis: "x",
-          position: "bottom",
-          scale: this._chart._x
-        });
-      });
-
-      if (this.options.distance != "summary") {
-        this.on("elechart_axis", function () {
-          var _this = this;
-
-          distance.x = this._chart._x;
-          distance.label = this._chart._xLabel;
-
-          this._chart._registerAxisScale({
-            axis: "x",
-            position: "bottom",
-            scale: distance.x,
-            label: distance.label,
-            labelY: 25,
-            labelX: function labelX() {
-              return _this._width() + 6;
-            },
-            name: "distance"
-          });
-        });
-      }
-
-      this._registerSummary({
-        "totlen": {
-          label: "Total Length: ",
-          value: function value(track) {
-            return (track.distance || 0).toFixed(2) + '&nbsp;' + _this2._xLabel;
-          }
-        }
-      });
-    });
-
-    Elevation.addInitHook(function () {
-      var _this = this;
-
       var opts = this.options;
       var altitude = {};
 
       if (opts.imperial) {
-        this._heightFactor = this.__footFactor;
-        this._yLabel = "ft";
+        opts.altitudeFactor = this.__footFactor;
+        altitude.label = "ft";
       } else {
-        this._heightFactor = opts.heightFactor;
-        this._yLabel = opts.yLabel;
+        opts.altitudeFactor = opts.heightFactor || opts.altitudeFactor || 1;
+        altitude.label = opts.yLabel;
       }
 
       this.on("eledata_updated", function (e) {
         var data = this._data;
         var i = e.index;
-        var z = data[i].z * this._heightFactor;
+        var z = data[i].z * opts.altitudeFactor;
         var track = this.track_info;
-        var eleMax = track.elevation_max || -Infinity;
-        var eleMin = track.elevation_min || +Infinity; // check and fix missing elevation data on last added point
+        var zMax = track.elevation_max || -Infinity;
+        var zMin = track.elevation_min || +Infinity; // check and fix missing elevation data on last added point
 
         if (!this.options.skipNullZCoords && i > 0) {
           var prevZ = data[i - 1].z;
@@ -3409,14 +3196,12 @@
 
 
         if (!isNaN(z)) {
-          eleMax = eleMax < z ? z : eleMax;
-          eleMin = eleMin > z ? z : eleMin;
           this._lastValidZ = z;
         }
 
+        track.elevation_max = z > zMax ? z : zMax;
+        track.elevation_min = z < zMin ? z : zMin;
         data[i].z = z;
-        track.elevation_max = eleMax;
-        track.elevation_min = eleMin;
       });
       this.on("elechart_axis", function () {
         this._chart._registerAxisGrid({
@@ -3428,13 +3213,10 @@
 
       if (this.options.altitude != "summary") {
         this.on("elechart_axis", function () {
-          altitude.y = this._chart._y;
-          altitude.label = this._yLabel;
-
           this._chart._registerAxisScale({
             axis: "y",
             position: "left",
-            scale: altitude.y,
+            scale: this._chart._y,
             label: altitude.label,
             labelX: -3,
             labelY: -8,
@@ -3444,8 +3226,6 @@
         this.on("elechart_init", function () {
           var theme = this.options.theme.replace('-theme', '');
           var color = Colors[theme] || {};
-          var alpha = this.options.detached ? color.alpha || '0.8' : 1;
-          var stroke = this.options.detached ? color.stroke : false;
 
           this._chart._registerAreaPath({
             name: 'altitude',
@@ -3453,25 +3233,111 @@
             scaleX: 'distance',
             scaleY: 'altitude',
             color: color.area || theme,
-            strokeColor: stroke || '#000',
+            strokeColor: this.options.detached ? color.stroke : '#000',
             strokeOpacity: "1",
-            fillOpacity: alpha,
+            fillOpacity: this.options.detached ? color.alpha || '0.8' : 1,
             preferCanvas: this.options.preferCanvas
           });
         });
       }
 
+      this._registerTooltip({
+        name: 'y',
+        chart: function chart(item) {
+          //return L._("y: ") + d3.format("." + opts.decimalsY + "f")(item[opts.yAttr]) + " " + altitude.label;
+          //EC
+          return L._("Alt: ") + d3.format("." + opts.decimalsY + "f")(item[opts.yAttr]) + " " + altitude.label;
+        },
+        marker: function marker(item) {
+          return d3.format("." + opts.decimalsY + "f")(item[opts.yAttr]) + " " + altitude.label;
+        }
+      });
+
       this._registerSummary({
         "maxele": {
           label: "Max Elevation: ",
           value: function value(track) {
-            return (track.elevation_max || 0).toFixed(2) + '&nbsp;' + _this._yLabel;
+            return (track.elevation_max || 0).toFixed(2) + '&nbsp;' + altitude.label;
           }
         },
         "minele": {
           label: "Min Elevation: ",
           value: function value(track) {
-            return (track.elevation_min || 0).toFixed(2) + '&nbsp;' + _this._yLabel;
+            return (track.elevation_min || 0).toFixed(2) + '&nbsp;' + altitude.label;
+          }
+        }
+      });
+    });
+
+    Elevation.addInitHook(function () {
+      var opts = this.options;
+      var distance = {};
+
+      if (opts.imperial) {
+        opts.distanceFactor = this.__mileFactor;
+        distance.label = "mi";
+      } else {
+        opts.distanceFactor = opts.distanceFactor || 1;
+        distance.label = opts.xLabel;
+      }
+
+      this.on("eledata_updated", function (e) {
+        var data = this._data;
+        var i = e.index;
+        var track = this.track_info;
+        var dist = track.distance || 0;
+        var curr = data[i].latlng;
+        var prev = i > 0 ? data[i - 1].latlng : curr;
+        var delta = curr.distanceTo(prev) * opts.distanceFactor;
+        dist += Math.round(delta / 1000 * 100000) / 100000; // handles floating points calc
+
+        track.distance = dist;
+        data[i].dist = dist;
+      });
+      this.on("elechart_axis", function () {
+        this._chart._registerAxisGrid({
+          axis: "x",
+          position: "bottom",
+          scale: this._chart._x
+        });
+      });
+
+      if (this.options.distance != "summary") {
+        this.on("elechart_axis", function () {
+          var _this = this;
+
+          this._chart._registerAxisScale({
+            axis: "x",
+            position: "bottom",
+            scale: this._chart._x,
+            label: distance.label,
+            labelY: 25,
+            labelX: function labelX() {
+              return _this._width() + 6;
+            },
+            name: "distance"
+          });
+        });
+      }
+
+      this._registerTooltip({
+        name: 'x',
+        chart: function chart(item) {
+          //return L._("x: ") + d3.format("." + opts.decimalsX + "f")(item[opts.xAttr]) + " " + distance.label;
+          //EC
+          return L._("Dist: ") + d3.format("." + opts.decimalsX + "f")(item[opts.xAttr]) + " " + distance.label;
+        },
+        // EC - para adicionar a distância percorrida à tooltip do trilho
+        marker: function marker(item) {
+          return d3.format("." + opts.decimalsX + "f")(item[opts.xAttr]) + " " + distance.label;
+        }
+      });
+
+      this._registerSummary({
+        "totlen": {
+          label: "Total Length: ",
+          value: function value(track) {
+            return (track.distance || 0).toFixed(2) + '&nbsp;' + distance.label;
           }
         }
       });
@@ -3483,7 +3349,7 @@
       var opts = this.options;
       var time = {};
       time.label = opts.timeLabel || 't';
-      this._timeFactor = opts.timeFactor;
+      opts.timeFactor = opts.timeFactor || 3600;
       /**
        * Common AVG speeds:
        * ----------------------
@@ -3548,7 +3414,7 @@
           e.point.meta = e.point.meta || {};
           var delta = data[i].dist - data[i > 0 ? i - 1 : i].dist;
           var speed = this._timeAVGSpeed;
-          e.point.meta.time = new Date(i > 0 ? data[i - 1].time.getTime() + delta / speed * this._timeFactor * 1000 : Date.now());
+          e.point.meta.time = new Date(i > 0 ? data[i - 1].time.getTime() + delta / speed * opts.timeFactor * 1000 : Date.now());
         }
 
         var time = e.point.meta.time; // Handle timezone offset
@@ -3561,16 +3427,25 @@
         var prevT = i > 0 ? data[i - 1].time : currT;
         var deltaT = Math.abs(currT - prevT);
         var duration = (this.track_info.time || 0) + deltaT;
+        this.track_info.time = duration;
         data[i].time = time;
         data[i].duration = duration;
-        this.track_info.time = duration;
       });
 
+      if (this.options.timestamps) {
+        this._registerTooltip({
+          name: 'date',
+          chart: function chart(item) {
+            return L._("t: ") + _this.options.timeFormat(item.time);
+          }
+        });
+      }
+
       if (this.options.time) {
-        this._registerFocusLabel({
+        this._registerTooltip({
           name: 'time',
           chart: function chart(item) {
-            return _this.options.timeFormat(item.time);
+            return L._("T: ") + formatTime(item.duration || 0);
           }
         });
 
@@ -3656,25 +3531,19 @@
         } // Range of acceptable slope values.
 
 
-        if (this.options.sRange) {
-          var range = this.options.sRange;
-          if (slope < range[0]) slope = range[0];else if (slope > range[1]) slope = range[1];
-        }
-
-        slope = L.Util.formatNum(slope, 2);
-        if (slope > sMax) sMax = slope;
-        if (slope < sMin) sMin = slope;
-        data[i].slope = slope;
+        slope = clamp(slope, this.options.sRange);
         track.ascent = tAsc;
         track.descent = tDes;
-        track.slope_max = sMax;
-        track.slope_min = sMin;
+        track.slope_max = slope > sMax ? slope : sMax;
+        track.slope_min = slope < sMin ? slope : sMin;
+        data[i].slope = L.Util.formatNum(slope, 2);
       });
 
-      this._registerFocusLabel({
+      this._registerTooltip({
         name: 'slope',
         chart: function chart(item) {
-          return item.slope + slope.label;
+          //return L._("m: ") + item.slope + slope.label;
+          return L._("Dec.: ") + item.slope + slope.label;
         },
         marker: function marker(item) {
           return Math.round(item.slope) + slope.label;
@@ -3685,13 +3554,13 @@
         "ascent": {
           label: "Total Ascent: ",
           value: function value(track) {
-            return Math.round(track.ascent || 0) + '&nbsp;' + _this._yLabel;
+            return Math.round(track.ascent || 0) + '&nbsp;' + (_this.options.imperial ? 'ft' : 'm');
           }
         },
         "descent": {
           label: "Total Descent: ",
           value: function value(track) {
-            return Math.round(track.descent || 0) + '&nbsp;' + _this._yLabel;
+            return Math.round(track.descent || 0) + '&nbsp;' + (_this.options.imperial ? 'ft' : 'm');
           }
         },
         "minslope": {
@@ -3713,8 +3582,8 @@
       if (!this.options.speed && !this.options.acceleration) return;
       var opts = this.options;
       var speed = {};
-      speed.label = opts.speedLabel || L._(this.options.imperial ? 'mph' : 'km/h');
-      this._speedFactor = opts.speedFactor || 1;
+      speed.label = opts.speedLabel || L._(opts.imperial ? 'mph' : 'km/h');
+      opts.speedFactor = opts.speedFactor || 1;
 
       if (this.options.speed && this.options.speed != "summary") {
         this._registerAxisScale({
@@ -3761,7 +3630,7 @@
 
         if (deltaT > 0) {
           var delta = (data[i].dist - data[i > 0 ? i - 1 : i].dist) * 1000;
-          speed = Math.abs(delta / deltaT * this._timeFactor) * this._speedFactor;
+          speed = Math.abs(delta / deltaT * opts.timeFactor) * opts.speedFactor;
         } // Try to smooth "crazy" speed values.
 
 
@@ -3775,26 +3644,18 @@
         } // Range of acceptable speed values.
 
 
-        if (this.options.speedRange) {
-          var range = this.options.speedRange;
-          if (speed < range[0]) speed = range[0];else if (speed > range[1]) speed = range[1];
-        }
-
-        speed = L.Util.formatNum(speed, 2);
-        sMax = speed > sMax ? speed : sMax;
-        sMin = speed < sMin ? speed : sMin;
-        sAvg = (speed + sAvg) / 2.0;
-        data[i].speed = speed;
-        track.speed_max = sMax;
-        track.speed_min = sMin;
-        track.speed_avg = sAvg;
+        speed = clamp(speed, this.options.speedRange);
+        track.speed_max = speed > sMax ? speed : sMax;
+        track.speed_min = speed < sMin ? speed : sMin;
+        track.speed_avg = (speed + sAvg) / 2.0;
+        data[i].speed = L.Util.formatNum(speed, 2);
       });
 
       if (this.options.speed) {
-        this._registerFocusLabel({
+        this._registerTooltip({
           name: 'speed',
           chart: function chart(item) {
-            return item.speed + " " + speed.label;
+            return L._('v: ') + item.speed + " " + speed.label;
           },
           marker: function marker(item) {
             return Math.round(item.speed) + " " + speed.label;
@@ -3828,8 +3689,8 @@
       if (!this.options.acceleration) return;
       var opts = this.options;
       var acceleration = {};
-      acceleration.label = opts.accelerationLabel || L._(this.options.imperial ? 'ft/s²' : 'm/s²');
-      this._accelerationFactor = opts.accelerationFactor || 1;
+      acceleration.label = opts.accelerationLabel || L._(opts.imperial ? 'ft/s²' : 'm/s²');
+      opts.accelerationFactor = opts.accelerationFactor || 1;
 
       if (this.options.acceleration != "summary") {
         this._registerAxisScale({
@@ -3877,8 +3738,8 @@
         if (deltaT > 0) {
           var curr = data[i].speed;
           var prev = i > 0 ? data[i - 1].speed : curr;
-          var delta = (curr - prev) * (1000 / this._timeFactor);
-          acceleration = Math.abs(delta / deltaT) * this._accelerationFactor;
+          var delta = (curr - prev) * (1000 / opts.timeFactor);
+          acceleration = Math.abs(delta / deltaT) * opts.accelerationFactor;
         } // Try to smooth "crazy" acceleration values.
 
 
@@ -3892,25 +3753,17 @@
         } // Range of acceptable acceleration values.
 
 
-        if (this.options.accelerationRange) {
-          var range = this.options.accelerationRange;
-          if (acceleration < range[0]) acceleration = range[0];else if (acceleration > range[1]) acceleration = range[1];
-        }
-
-        acceleration = L.Util.formatNum(acceleration, 2);
-        if (acceleration > sMax) sMax = acceleration;
-        if (acceleration < sMin) sMin = acceleration;
-        sAvg = (acceleration + sAvg) / 2.0;
-        data[i].acceleration = acceleration;
-        track.acceleration_max = sMax;
-        track.acceleration_min = sMin;
-        track.acceleration_avg = sAvg;
+        acceleration = clamp(acceleration, this.options.accelerationRange);
+        track.acceleration_max = acceleration > sMax ? acceleration : sMax;
+        track.acceleration_min = acceleration < sMin ? acceleration : sMin;
+        track.acceleration_avg = (acceleration + sAvg) / 2.0;
+        data[i].acceleration = L.Util.formatNum(acceleration, 2);
       });
 
-      this._registerFocusLabel({
+      this._registerTooltip({
         name: 'acceleration',
         chart: function chart(item) {
-          return item.acceleration + " " + acceleration.label;
+          return L._("a: ") + item.acceleration + " " + acceleration.label;
         },
         marker: function marker(item) {
           return Math.round(item.acceleration) + " " + acceleration.label;
@@ -3977,6 +3830,33 @@
     Elevation.Utils = _;
     Elevation.Components = D3;
     Elevation.Chart = Chart$1;
+    /* Temporary fix for empty values evaluated as false (leaflet-i18n v0.3.1) */
+
+    (function () {
+      var proto = L.i18n.bind({});
+
+      L.i18n = L._ = function (string, data) {
+        if (L.locale && L.locales[L.locale] && L.locales[L.locale][string] == "") {
+          L.locales[L.locale][string] = "\u200B";
+        }
+
+        return proto.call(null, string, data);
+      };
+    })(); // Alias deprecated functions
+
+
+    Elevation.addInitHook(function () {
+      this.enableDragging = this.enableBrush;
+      this.disableDragging = this.disableBrush;
+      this.loadChart = this.addTo;
+      this.loadData = this.load;
+      this.loadGPX = this.load;
+      this.loadGeoJSON = this.load;
+      this.loadXML = this.load;
+      this.loadFile = this.load;
+      this._addGPXData = this._addGeoJSONData;
+      this._registerFocusLabel = this._registerTooltip;
+    });
 
     L.control.elevation = function (options) {
       return new Elevation(options);

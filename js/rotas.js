@@ -40,7 +40,7 @@ var baseMaps = {
     "Satélite": Esri_WorldImagery
 };
 L.control.layers(baseMaps, null, {
-    collapsed: false,
+    collapsed: false
 }).addTo(map);
 
 
@@ -63,6 +63,15 @@ map.attributionControl.setPrefix(
     '&copy; <a href="https://sites.google.com/view/fmtcultura/projeto">Projecto Alminhas</a>' + ' &copy; Mapa Interactivo: <a href="mailto:ezcorreia@gmail.com">Ezequiel Correia</a> | <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>'
 );
 
+var lc = L.control.locate({
+    strings: {
+        title: "A minha posição!"
+    },
+    locateOptions: {
+               maxZoom: 15
+    }
+});
+lc.addTo(map);
 /*
 * ----------------------------
 *   Plugin Leaflet.Elevation (Naruto adpatado(?) por Niel)
@@ -77,7 +86,7 @@ var elevation_options = {
     detached: false,
     elevationDiv: "#elevation-div",
     autohide: false,
-    collapsed: true, //o perfil abre fechado, aparecendo uma imagem; quando abre tem um botão para fechar 
+    collapsed: true, //o perfil abre fechado, aparecendo uma imagem; quando abre tem um botão para fechar
     position: "bottomleft", //"topright",
     followMarker: true,
     autofitBounds: true,
@@ -89,8 +98,8 @@ var elevation_options = {
     time: false,
     distance: true,
     altitude: true,
-    summary: 'line', 
-    downloadLink: false,
+    summary: 'line',
+    downloadLink: 'false', //'link'
     ruler: true,
     legend: false, //mostra/esconde a legenda
     almostOver: true,
@@ -102,27 +111,42 @@ var elevation_options = {
             className: 'elevation-waypoint-marker',
             html: '<i class="elevation-waypoint-icon"></i>',
             iconSize: [30, 30],
-            iconAnchor: [4, 15] //[8, 30]
+            iconAnchor: [15, 30] //[4, 15] //[8, 30]
+      }),
+      'start': L.divIcon({
+            className: 'elevation-waypoint-marker',
+            html: '<i class="elevation-waypoint-icon start"></i>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30] //[8, 30]
+      }),
+      'end': L.divIcon({
+            className: 'elevation-waypoint-marker',
+            html: '<i class="elevation-waypoint-icon end"></i>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30] //[8, 30]
       })
+
     },
     wptLabels: true,
     preferCanvas: true,
-    // é necessário leaflet-gpx.js ?
+    /*
     gpxOptions: {
         marker_options: {
-            startIconUrl: 'pin-icon-start.png',
-            endIconUrl: 'pin-icon-end.png',
-            shadowUrl: 'pin-shadow.png'
+        startIconUrl: '../pin-icon-start.png',
+        endIconUrl: '../pin-icon-end.png',
+        shadowUrl: '../pin-shadow.png'
         }
-    }
+    },*/
 };
+// é necessário leaflet-gpx.js ?
+
 /*
 * --------------------
-* Personaliza a info 
+* Personaliza a info
 * --------------------
 */
 const mylocale = {
-    "Total Length: ":"Dist.: ",
+    "Total Length: ":"Dist. total: ",
     "Max Elevation: ":" Alt. max: ",
     "Min Elevation: ":" Alt. min: ",
     "Total Ascent: ":" D+ ",
@@ -141,3 +165,30 @@ var controlElevation = L.control.elevation(elevation_options).addTo(map);
 */
 
 controlElevation.load("data/alminhas_rota_abergaria.gpx");
+
+/*
+* ----------------------
+* Abre uma imagem ampliada
+* ----------------------
+*/
+
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the image and insert it inside the modal - use its "alt" text as a caption
+var img = document.getElementById("myImg");
+var modalImg = document.getElementById("img01");
+var captionText = document.getElementById("caption");
+img.onclick = function(){
+  modal.style.display = "block";
+  modalImg.src = this.src;
+  captionText.innerHTML = this.alt;
+}
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style.display = "none";
+}
