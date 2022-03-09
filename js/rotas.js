@@ -113,6 +113,12 @@ var elevation_options = {
             iconSize: [30, 30],
             iconAnchor: [15, 30] //[4, 15] //[8, 30]
       }),
+      'alm': L.divIcon({
+            className: 'elevation-waypoint-marker',
+            html: '<i class="elevation-waypoint-icon alm"></i>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30] //[8, 30]
+      }),
       'start': L.divIcon({
             className: 'elevation-waypoint-marker',
             html: '<i class="elevation-waypoint-icon start"></i>',
@@ -164,7 +170,7 @@ var controlElevation = L.control.elevation(elevation_options).addTo(map);
 * ----------------------
 */
 
-controlElevation.load("data/alminhas_rota_abergaria.gpx");
+controlElevation.load("data/rota_lousada.gpx");
 
 /*
 * ----------------------
