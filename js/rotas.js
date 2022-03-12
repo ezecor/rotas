@@ -60,7 +60,7 @@ L.control.scale({
 * -------------------------
 */
 map.attributionControl.setPrefix(
-    '&copy; <a href="https://sites.google.com/view/fmtcultura/projeto">Projecto Alminhas</a>' + ' &copy; Mapa Interactivo: <a href="mailto:ezcorreia@gmail.com">Ezequiel Correia</a> | <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>'
+    '&copy; <a href="https://sites.google.com/view/fmtcultura/projeto">Projecto Alminhas</a>' + ' &copy; Mapa Interactivo: <a href="mailto:ezcorreia@gmail.com">Ezequiel Correia</a> | CR1: <a href="https://www.cm-lousada.pt/pages/665">CM Lousada</a> | <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>'
 );
 
 var lc = L.control.locate({
@@ -99,12 +99,12 @@ var elevation_options = {
     distance: true,
     altitude: true,
     summary: 'line',
-    downloadLink: 'false', //'link'
+    downloadLink: false, //'link'
     ruler: true,
     legend: false, //mostra/esconde a legenda
     almostOver: true,
     distanceMarkers: true,
-    yAxisMin: 700, //forçar o Y
+    yAxisMin: 0, //forçar o Y
     waypoints: true,
     wptIcons: {
       '': L.divIcon({
