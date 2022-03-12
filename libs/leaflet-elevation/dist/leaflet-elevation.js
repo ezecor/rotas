@@ -303,8 +303,10 @@
       },
       /*EC-THEME*/
         'ec': {
-        area: 'rgba(153, 0, 153, 0.4)',
-        line: 'rgba(191, 122, 25, 1)'
+        //area: 'rgba(153, 0, 153, 0.4)',
+        //line: 'rgba(191, 122, 25, 1)'
+        area: 'rgba(255, 102, 102, 0.8)',
+        line: 'rgba(191, 122, 25, 1)'            
       }
     };
     var Area = function Area(_ref) {
@@ -2503,7 +2505,9 @@
         if (!this.options.detached) {
           var link = this._button = create('a', "elevation-toggle elevation-toggle-icon" + (this.options.autohide ? "" : " close-button"), {
             href: '#',
-            title: L._('Elevation')
+            //title: L._('Elevation')
+            //EC
+            title: L._('Perfil')
           }, container);
 
           if (this.options.collapsed) {
