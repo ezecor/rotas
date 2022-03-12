@@ -481,8 +481,8 @@
 
 .ec-theme.elevation-control.elevation .area {
 	/*fill: rgba(204, 51, 0, 0.8);*/
-    fill: rgba(153, 0, 153, 0.4);
-    stroke-width: 1;
+    fill: rgba(255, 102, 102, 0.8);
+    stroke-width: 0.5;
 	stroke: rgb(191, 122, 25);
 }
 
