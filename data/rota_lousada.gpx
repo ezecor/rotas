@@ -3283,7 +3283,7 @@
   <wpt lat="41.290272" lon="-8.237036">
     <ele>0.0</ele>
     <name>Alminhas</name>
-    <desc>Outeiro, Rua de Moinhos</desc>
+    <desc>&lt;img style="max-width:300px;" src="img/lousada27.png">Outeiro, Rua de Moinhos &lt;a href="https://docs.google.com/document/d/e/2PACX-1vTbejbJaNx96Wq3zKhLeDSDrnsOd_1P69aCysGvz-MqtzvfOUvVCxSctDSQxRxaKl8ocZRdEdIleZaA/pub" target="_blank">Ver mais&lt;/a></desc>
     <sym>alm</sym>
   </wpt>
   <wpt lat="41.263008" lon="-8.261322">
